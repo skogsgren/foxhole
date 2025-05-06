@@ -2,15 +2,14 @@
 
 ## DEVELOPMENT INSTALLATION
 
-Tested on Debian 12, so YMMV
-
 ```
-python3 -m venv /path/to/venv
-source /path/to/venv/bin/activate
 pip3 install -e .
 ```
 
-Then install the host connection using:
+For Windows, make sure that `python3` is installed from the Python website and
+is added to PATH.
+
+Install the host connection using:
 
 ```
 foxhole-install
