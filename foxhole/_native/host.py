@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
-import sys
-import struct
 import json
-import sqlite3
 import os
+import sqlite3
+import struct
+import sys
+from urllib.parse import urlparse
 
-from config import DATADIR, DOCPATH
+from config import DATADIR, DOCPATH, IGNORE_LIST
+
+
+def is_ignored(url):
+    netloc = urlparse(url).netloc
+    return any(
+        netloc == domain or netloc.endswith("." + domain) for domain in IGNORE_LIST
+    )
 
 
 def read_message():
@@ -36,7 +44,13 @@ def main():
     )
     """)
     msg = read_message()
-    if msg and "title" in msg and "text" in msg and "url" in msg:
+    if (
+        msg
+        and "title" in msg
+        and "text" in msg
+        and "url" in msg
+        and not is_ignored(msg["url"])
+    ):
         conn.execute(
             "INSERT OR IGNORE INTO pages (title, text, url) VALUES (?, ?, ?)",
             (msg["title"], msg["text"], msg["url"]),
