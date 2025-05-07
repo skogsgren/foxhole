@@ -1,5 +1,9 @@
 # Foxhole - Local Semantic Search For Firefox History
 
+Local-first tool to semantically search and explore your Firefox browsing
+history using embeddings and natural language. Like a search engine but for
+your browser history!
+
 ## Documentation
 
 ### `IGNORE`
