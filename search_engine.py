@@ -1,0 +1,81 @@
+"""search_engine.py"""
+import sqlite3
+from abc import ABC, abstractmethod
+from pathlib import Path
+from sklearn.feature_extraction.text import TfidfVectorizer #add sklearn to requirements.txt
+from sklearn.metrics.pairwise import cosine_similarity
+
+class SearchEngine(ABC):
+    @abstractmethod
+    def load_db(self, db_path: Path) -> None:
+        """Load and index content from a SQLite database"""
+        pass
+    @abstractmethod
+    def search_db(self, query: str, top_k: int = 5) -> list[str]:
+        """Search the index for the query, return list of URLs or IDs"""
+        pass
+
+class TFIDFSearchEngine(SearchEngine):
+    def __init__(self) -> None:
+        """Initialize the TF-IDF search engine"""
+        self.vectorizer = TfidfVectorizer()
+        self.tfidf_matrix = None
+        self.docs = []  # full text
+        self.urls = []  # for return
+        self.db_path = None
+
+    def load_db(self, db_path: Path) -> None:
+        """Load and index content from a SQLite database"""
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT url, text FROM pages")
+        rows = cursor.fetchall()
+        conn.close()
+
+        if not rows:
+            raise ValueError("No documents found.")
+
+        self.urls, self.docs = zip(*rows)
+        self.tfidf_matrix = self.vectorizer.fit_transform(self.docs)
+
+    def search_db(self, query: str, top_k: int = 5) -> list[str]:
+        """Search the index for the query, return list of URLs or IDs"""
+        if self.tfidf_matrix is None:
+            raise ValueError("TF-IDF matrix not initialized. Did you call load_db()?")
+        query_vector = self.vectorizer.transform([query])
+        similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
+        top_indices = similarities.argsort()[::-1][:top_k]
+        return [self.urls[i] for i in top_indices]
+
+class BM25SearchEngine(SearchEngine):
+    """BM25 Search Engine"""
+    #TODO: Implement
+
+class ChromaSemanticSearchEngine(SearchEngine):
+    """Chroma Semantic Search Engine"""
+    #TODO: Implement
+
+def main():
+    """The main function. Runs a test"""
+
+    # A simple test with a simple interface
+    engine = TFIDFSearchEngine()
+    engine.load_db(Path("doc.db"))  # path to .db file
+
+    while True:
+        query = input("Enter a search query (or -exit- to quit): ").strip()
+        if query.lower() in {"exit"}:
+            break
+        results = engine.search_db(query)
+        query_vector = engine.vectorizer.transform([query])
+        similarities = cosine_similarity(query_vector, engine.tfidf_matrix).flatten()
+
+        print("\nTop results:")
+        for i, url in enumerate(results, 1):
+            index = engine.urls.index(url)
+            score = similarities[index]
+            print(f"{i}. {url} — score: {score:.3f}")
+        print()
+
+if __name__== "__main__":
+    main()
