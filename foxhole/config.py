@@ -35,3 +35,7 @@ MANIFESTDIR = MANIFESTDIR.expanduser().resolve()
 
 DOCPATH = (DATADIR / "doc.db").expanduser().resolve()
 VECPATH = (DATADIR / "vec.db").expanduser().resolve()
+
+ignore_list_path = DATADIR / "IGNORE"
+ignore_list_path.touch(exist_ok=True)
+IGNORE_LIST = ignore_list_path.read_text().splitlines()

@@ -1,5 +1,15 @@
 # Foxhole - Local Semantic Search For Firefox History
 
+## Documentation
+
+### `IGNORE`
+
+In your data directory a file called `IGNORE` will be created during
+installation. Put urls you don't want saved in here, or (imo) most importantly
+those pages you keep returning to often like your search engine which will not
+provide highly relevant search results for this type of browser history search
+(ideally we only want "content" sites in our index).
+
 ## DEVELOPMENT INSTALLATION
 
 ```
