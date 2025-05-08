@@ -39,3 +39,8 @@ VECPATH = (DATADIR / "vec.db").expanduser().resolve()
 ignore_list_path = DATADIR / "IGNORE"
 ignore_list_path.touch(exist_ok=True)
 IGNORE_LIST = ignore_list_path.read_text().splitlines()
+
+TEST_QUERIES = [
+    "superman",
+    "machine learning",
+]
