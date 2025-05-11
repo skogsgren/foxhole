@@ -89,7 +89,10 @@ def main():
                 break
             query = user_input
             print("Searching with method", search_method, "the following query:", query)
-            result = se.search_db(query)
+            if k_provided:
+                result = se.search_db(query, top_k)
+            else:
+                result = se.search_db(query)
             print("result:\n", result)
 
 
