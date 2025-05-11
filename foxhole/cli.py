@@ -1,9 +1,3 @@
-import sqlite3
-from abc import ABC, abstractmethod
-from pathlib import Path
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-
 import search
 import sys
 
