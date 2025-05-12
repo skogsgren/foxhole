@@ -49,7 +49,8 @@ class TFIDFSearchEngine(SearchEngine):
         query_vector = self.vectorizer.transform([query])
         similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         top_indices = similarities.argsort()[::-1][:top_k]
-        return [self.urls[i] for i in top_indices]
+        # we have to add one since sqlite indexes from 1
+        return [i + 1 for i in top_indices]
 
 
 class BM25SearchEngine(SearchEngine):
