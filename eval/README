@@ -1,0 +1,57 @@
+= EVALUATION SET CREATION INSTRUCTIONS
+Run ./create_eval_dataset.py using the following arguments:
+    python3 create_eval_dataset.py \
+        --query_file ./queries.txt \
+        --doc_path /path/to/provided/doc.db \
+        --vec_path /path/to/provided/vec.db \
+        -k 30
+
+The doc/vec database used for the creation of the evaluation for this
+repo is not provided here. If, for some reason, you are interested,
+give me a holler!
+
+= ANNOTATION GUIDELINES
+The basic premise around this type of annotation is simple: relevant
+if it seems relevant to the query, not relevant otherwise. Examples:
+
+query:
+    apple email blog
+doc_title:
+    From: Steve Jobs. "Great idea, thank you."
+doc_text:
+    Now that I’ve been retired for a couple of days, I think I can
+    finally tell this story of how I was – very briefly – steve@next.com
+
+    And Steve Jobs sent me an email saying “Great idea, thank you."
+
+    Wait, what? What was the great idea?
+    ...
+label:
+    Relevant
+
+query:
+    psychology blog change yourself
+doc_title:
+    chunking_evaluation/chunking_evaluation/evalua...
+doc_text:
+    = Valkyria Chronicles III = Senjō no Valkyria 3 : Chronicles (
+    Japanese : 戦場のヴァルキュリア3 , lit . Valkyria of the
+    Battlefield 3) , commonly referred to as Valkyria Chronicles III
+    outside Japan , is a tactical role ...
+label:
+    Not relevant
+
+= ANNOTATION INSTRUCTIONS
+Run ./annotation.py using the following arguents:
+    python3 annotation.py -i /path/to/eval_dataset.tsv -o /path/to/output.tsv
+
+This runs a basic tkinter interface for annotation where you can see:
+
+- ID: current document ID
+- query: the query used to get the document
+- text: the text of the document in question
+- Not relevant/Relevant: buttons to label a document
+- IDX/TOTAL: a basic counter to indicate current progress.
+
+If you accidentally label something incorrectly, just exit the program
+(it saves automatically), and remove the last row in your output file.
