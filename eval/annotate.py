@@ -115,9 +115,13 @@ progress_label = tk.Label(root, text="")
 progress_label.pack()
 
 tk.Button(button_frame, text="Not relevant", command=lambda: next_entry(0)).pack(
+tk.Button(button_frame, text="(0) Not relevant", command=lambda: next_entry(0)).pack(
     side="left"
 )
-tk.Button(button_frame, text="Relevant", command=lambda: next_entry(1)).pack(
+tk.Button(button_frame, text="(1) Relevant", command=lambda: next_entry(1)).pack(
+    side="left"
+)
+tk.Button(button_frame, text="(2) Highly relevant", command=lambda: next_entry(2)).pack(
     side="left"
 )
 
