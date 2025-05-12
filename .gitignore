@@ -175,4 +175,5 @@ cython_debug/
 
 
 *.swp
-*.db
+eval/*.db
+eval/*.json
