@@ -14,7 +14,7 @@ dependencies = [
 foxhole-install = "foxhole.install:install_native_host"
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest", "ir_measures"]
 
 [build-system]
 requires = ["setuptools", "wheel"]
