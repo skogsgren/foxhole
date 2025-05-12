@@ -12,7 +12,12 @@ give me a holler!
 
 = ANNOTATION GUIDELINES
 The basic premise around this type of annotation is simple: relevant
-if it seems relevant to the query, not relevant otherwise. Examples:
+if it seems relevant to the query, not relevant otherwise. Be lenient,
+I think, on judgments. In other words, if the query is --- say ---
+conspiracy theory and the document is the Wikipedia article for _The
+DaVinci Code_, then that is relevant (fight me!).
+
+Examples:
 
 query:
     apple email blog
@@ -42,8 +47,8 @@ label:
     Not relevant
 
 = ANNOTATION INSTRUCTIONS
-Run ./annotation.py using the following arguents:
-    python3 annotation.py -i /path/to/eval_dataset.tsv -o /path/to/output.tsv
+Run ./annotate.py using the following arguents:
+    python3 annotate.py -i /path/to/eval_dataset.tsv -o /path/to/output.tsv
 
 This runs a basic tkinter interface for annotation where you can see:
 
