@@ -47,7 +47,7 @@ def main(
         # add k to each query for redundancy, in the chance that each result in IR system 1 is also in system 2
         # NOTE: is this desired behavior?
         for query in queries:
-            top_k = system.search_db(query=query, top_k=k * 2)
+            top_k, _ = system.search_db(query=query, top_k=k * 2)
             system_rows = []
             for rank, i in enumerate(top_k):
                 if len(system_rows) > k:
