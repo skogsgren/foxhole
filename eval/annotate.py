@@ -27,7 +27,8 @@ if not out_path.exists():
             url TEXT,
             rank INTEGER,
             label TEXT,
-            PRIMARY KEY (query, system, id)
+            annotation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            UNIQUE (query, system, id)
         )
     """)
     out_conn.commit()

@@ -59,4 +59,11 @@ This runs a basic tkinter interface for annotation where you can see:
 - IDX/TOTAL: a basic counter to indicate current progress.
 
 If you accidentally label something incorrectly, just exit the program
-(it saves automatically), and remove the last row in your output file.
+(it saves automatically), and remove the latest inputted row using the following SQL query:
+
+    DELETE FROM annotations WHERE annotation_id = (SELECT MAX(annotation_id) FROM annotations);
+
+Do this from the command line using e.g.
+
+    sqlite3 /path/to/annotations.db \
+        "DELETE FROM annotations WHERE annotation_id = (SELECT MAX(annotation_id) FROM annotations);"
