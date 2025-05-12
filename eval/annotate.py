@@ -114,7 +114,16 @@ button_frame.pack()
 progress_label = tk.Label(root, text="")
 progress_label.pack()
 
-tk.Button(button_frame, text="Not relevant", command=lambda: next_entry(0)).pack(
+
+def on_key_press(event):
+    if event.char == "0":
+        next_entry(0)
+    elif event.char == "1":
+        next_entry(1)
+    elif event.char == "2":
+        next_entry(2)
+
+
 tk.Button(button_frame, text="(0) Not relevant", command=lambda: next_entry(0)).pack(
     side="left"
 )
@@ -124,6 +133,7 @@ tk.Button(button_frame, text="(1) Relevant", command=lambda: next_entry(1)).pack
 tk.Button(button_frame, text="(2) Highly relevant", command=lambda: next_entry(2)).pack(
     side="left"
 )
+root.bind("<KeyPress>", on_key_press)
 
 update_display()
 root.mainloop()
