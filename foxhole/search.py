@@ -14,8 +14,8 @@ class SearchEngine(ABC):
         pass
 
     @abstractmethod
-    def search_db(self, query: str, top_k: int = 5) -> list[str]:
-        """Search the index for the query, return list of URLs or IDs"""
+    def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]:
+        """Search the index for the query, return a tuple[indices, scores]"""
         pass
 
 
@@ -42,7 +42,7 @@ class TFIDFSearchEngine(SearchEngine):
         self.urls, self.docs = zip(*rows)
         self.tfidf_matrix = self.vectorizer.fit_transform(self.docs)
 
-    def search_db(self, query: str, top_k: int = 5) -> list[str]:
+    def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]:
         """Search the index for the query, return list of URLs or IDs"""
         if self.tfidf_matrix is None:
             raise ValueError("TF-IDF matrix not initialized. Did you call load_db()?")
@@ -50,7 +50,7 @@ class TFIDFSearchEngine(SearchEngine):
         similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         top_indices = similarities.argsort()[::-1][:top_k]
         # we have to add one since sqlite indexes from 1
-        return [i + 1 for i in top_indices]
+        return [i + 1 for i in top_indices], similarities[top_indices]
 
 
 class BM25SearchEngine(SearchEngine):
