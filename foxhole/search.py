@@ -1,4 +1,4 @@
-"""search_engine.py"""
+"""search.py"""
 
 import sqlite3
 from abc import ABC, abstractmethod
