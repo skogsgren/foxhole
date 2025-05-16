@@ -6,11 +6,20 @@ authors = [
 ]
 description = "(Semantic) text search for Firefox history"
 dependencies = [
-    "scikit-learn==1.6.1",
     "numpy==1.26.4",
+    "scikit-learn==1.6.1",
+    "langchain",
+    "langchain-huggingface",
+    "langchain-community",
+    "langchain-chroma",
+    "langchain-text-splitters",
+    "chromadb",
+    "sqlalchemy",
+    "transformers"
 ]
 
 [project.scripts]
+foxhole-search = "foxhole.cli:main"
 foxhole-install = "foxhole.install:install_native_host"
 
 [project.optional-dependencies]

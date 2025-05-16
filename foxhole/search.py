@@ -3,13 +3,29 @@
 import sqlite3
 from abc import ABC, abstractmethod
 from pathlib import Path
+
+from langchain.schema import Document
+from langchain_chroma import Chroma
+from langchain_community.document_loaders import SQLDatabaseLoader
+from langchain_community.utilities import SQLDatabase
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sqlalchemy import create_engine
+from transformers.models.auto.tokenization_auto import AutoTokenizer
+
+# since 5070-ish is the official limit for chroma, 5000 sounds like a good value
+MAX_BATCH = 5000
 
 
 class SearchEngine(ABC):
+    def __init__(self, doc_path: Path, vec_path: Path):
+        self.doc_path = doc_path
+        self.vec_path = vec_path
+
     @abstractmethod
-    def load_db(self, db_path: Path) -> None:
+    def load_db(self) -> None:
         """Load and index content from a SQLite database"""
         pass
 
@@ -20,7 +36,8 @@ class SearchEngine(ABC):
 
 
 class TFIDFSearchEngine(SearchEngine):
-    def __init__(self) -> None:
+    def __init__(self, doc_path: Path, vec_path: Path) -> None:
+        super().__init__(doc_path, vec_path)
         """Initialize the TF-IDF search engine"""
         self.vectorizer = TfidfVectorizer()
         self.tfidf_matrix = None
@@ -28,9 +45,9 @@ class TFIDFSearchEngine(SearchEngine):
         self.urls = []  # for return
         self.db_path = None
 
-    def load_db(self, db_path: Path) -> None:
+    def load_db(self) -> None:
         """Load and index content from a SQLite database"""
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(self.doc_path)
         cursor = conn.cursor()
         cursor.execute("SELECT url, text FROM pages")
         rows = cursor.fetchall()
@@ -61,85 +78,82 @@ class BM25SearchEngine(SearchEngine):
 
 class ChromaSemanticSearchEngine(SearchEngine):
     """Chroma Semantic Search Engine"""
-    def __init__(self):
-        import chromadb
-        #pip install git+https://github.com/brandonstarxel/chunking_evaluation.git
-        #this repo served also as source for the _chunker_to_collection() function
-        self.my_embedding_function = chromadb.utils.embedding_functions.SentenceTransformersEmbeddingFunction(
-                model_name="all-MiniLM-L6-v2"
-                )
-        #my_embedding_function = chromadb.utils.embedding_functions.OpenAIEmbeddingFunction(
-        #        api_key="OPENAI_API_KEY",
-        #        model_name="text-embedding-3-large"
-        #        )
-        self.collection_name = "my_webpages"
-        #cc = chromadb.Client()
-        #self.collection = cc.get_or_create_collection(name=self.collection_name)
-        from chunking_evaluation import ClusterSemanticChunker
-        self.my_chunker = ClusterSemanticChunker(self.my_embedding_function, max_chunk_size = 200)
 
-    def _chunker_to_collection(self, chunker, embedding_function, chroma_db_path:str = None, collection_name:str = None):
-        collection = None
+    def __init__(self, doc_path: Path, vec_path: Path):
+        super().__init__(doc_path, vec_path)
+        self.emb = HuggingFaceEmbeddings(
+            model_name="all-MiniLM-L6-v2",
+            show_progress=False,
+        )
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "sentence-transformers/all-MiniLM-L6-v2"
+        )
 
-        if chroma_db_path is not None:
-            try:
-                chunk_client = chromadb.PersistentClient(path=chroma_db_path)
-                collection = chunk_client.create_collection(collection_name, embedding_function=embedding_function, metadata={"hnsw:search_ef":50})
-                print("Created collection: ", collection_name)
-            except Exception as e:
-                print("Failed to create collection: ", e)
-                pass
-                # This shouldn't throw but for whatever reason, if it does we will default to below.
+    def chunk(self, docs: list[Document]):
+        """using RecursiveCharacterTextSplitter splits using model tokenizer"""
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=512
+        ).from_huggingface_tokenizer(self.tokenizer)
+        return text_splitter.split_documents(docs)
 
-        collection_name = "auto_chunk"
-        if collection is None:
-            try:
-                self.chroma_client.delete_collection(collection_name)
-            except ValueError as e:
-                pass
-            collection = self.chroma_client.create_collection(collection_name, embedding_function=embedding_function, metadata={"hnsw:search_ef":50})
+    def _filter_docs(self, docs: list[Document]) -> list[Document]:
+        """given documents, returns documents not already in chroma database"""
+        db = Chroma(persist_directory=str(self.vec_path), embedding_function=self.emb)
+        return [doc for doc in docs if not db.get(where={"id": doc.metadata["id"]})]
 
-        docs, metas = self._get_chunks_and_metadata(chunker)
+    def load_db(self):
+        """reads document database, creates/updates chroma vector db"""
+        docs = SQLDatabaseLoader(
+            # TODO: also save timestamp for pruning later
+            query="SELECT id,url,text FROM pages;",
+            db=SQLDatabase(create_engine(f"sqlite:///{str(self.doc_path)}")),
+            page_content_mapper=lambda x: x["text"],
+            metadata_mapper=lambda x: {"id": x["id"], "url": x["url"]},
+        ).load()
+        if self.vec_path.exists():
+            docs = self._filter_docs(docs)
+        if not docs:
+            print("no new documents to add")
+            return
 
-        BATCH_SIZE = 500
-        for i in range(0, len(docs), BATCH_SIZE):
-            batch_docs = docs[i:i+BATCH_SIZE]
-            batch_metas = metas[i:i+BATCH_SIZE]
-            batch_ids = [str(i) for i in range(i, i+len(batch_docs))]
-            collection.add(
-                documents=batch_docs,
-                metadatas=batch_metas,
-                ids=batch_ids
+        chunks = self.chunk(docs)
+        print(f"{len(chunks)} chunks from {len(docs)} documents.")
+
+        start = 0  # dirty trick to deal with batches w/o complex logic
+        if self.vec_path.exists():
+            db = Chroma(
+                persist_directory=str(self.vec_path), embedding_function=self.emb
             )
+            print(f"loaded previous vector db with {db._collection.count()}")
+        else:
+            print("vector db not found. initializing with first batch...")
+            db = Chroma.from_documents(
+                chunks[:MAX_BATCH], self.emb, persist_directory=str(self.vec_path)
+            )
+            start += MAX_BATCH
 
-            # print("Documents: ", batch_docs)
-            # print("Metadatas: ", batch_metas)
+        for i in (steps := list(range(start, len(chunks), MAX_BATCH))):
+            # NOTE: progress print is untested, remove if it doesn't work,
+            # along with walrus operator above; didn't have time to test
+            print(f"{i}/{steps[-1]}")
+            db.add_documents(chunks[i : i + MAX_BATCH])
 
-        return collection
+    def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]:
+        db = Chroma(persist_directory=str(self.vec_path), embedding_function=self.emb)
+        # NOTE: we do top_k * 100 to do max_score aggregation for document chunks.
+        # TODO: this isn't very good, some kind of pooling would be much better here
+        # NOTE: this doesn't guarantee top_k results in the end, should probably be fixed
+        chunk_results = db.similarity_search_with_score(query, k=top_k * 100)
 
-    def load_db(self, db_path:Path):
-        # read database
-        connection = sqlite3.connect(db_path)
-        cursor = connection.cursor()
-        res = cursor.execute("SELECT url, text FROM pages")
-        if res.fetchone() is None:
-            raise ValueError("No documents for ChromaSemanticSearch found.")
-        urls, docs = zip(*res.fetchall())
-        connection.close()
+        doc_scores = {}
+        for chunk, score in chunk_results:
+            doc_id = int(chunk.metadata["id"])
+            if doc_id not in doc_scores or score < doc_scores[doc_id]:
+                doc_scores[doc_id] = score
 
-        # add database documents to the collection
-        #self.collection.upsert(docs, urls) # or add
-        try:
-            cc = chromadb.PersistentClient(path=db_path)
-            self.collection = cc.get_collection(name=self.collection_name, embedding_function=self.my_embedding_function)
-        except:
-            self.collection = self._chunker_to_collection(self.my_chunker, self.my_embedding_function, chroma_db_path=db_path, collection_name=self.collection_name)
-        if self.collection is None:
-            self.collection = self._chunker_to_collection(self.my_chunker, self.my_embedding_function)
+        sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1])[:top_k]
 
+        doc_ids = [doc_id for doc_id, _ in sorted_docs]
+        scores = [score for _, score in sorted_docs]
 
-    def search_db(self, query:str, top_k:int=5):
-        # throw a warning for empty collections?
-        results = self.collection.query(query_texts=[query], n_results=top_k)
-
-        return results
+        return doc_ids, scores
