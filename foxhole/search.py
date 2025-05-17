@@ -40,13 +40,13 @@ class TFIDFSearchEngine(SearchEngine):
             raise ValueError("No documents found.")
 
         self.urls, self.docs = zip(*rows)
-        self.tfidf_matrix = self.vectorizer.fit_transform(self.docs)
+        self.tfidf_matrix = self.vectorizer.fit_transform(x.lower() for x in self.docs)
 
     def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]:
         """Search the index for the query, return list of URLs or IDs"""
         if self.tfidf_matrix is None:
             raise ValueError("TF-IDF matrix not initialized. Did you call load_db()?")
-        query_vector = self.vectorizer.transform([query])
+        query_vector = self.vectorizer.transform([query.lower()])
         similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         top_indices = similarities.argsort()[::-1][:top_k]
         # we have to add one since sqlite indexes from 1
