@@ -61,12 +61,14 @@ class BM25SearchEngine(SearchEngine):
 
 class ChromaSemanticSearchEngine(SearchEngine):
     """Chroma Semantic Search Engine"""
+
     def __init__(self):
         import chromadb
+
         cc = chromadb.Client()
         self.collection = cc.get_or_create_collection(name="my_webpages")
 
-    def load_db(self, db_path:Path):
+    def load_db(self, db_path: Path):
         # read database
         connection = sqlite3.connect(db_path)
         cursor = connection.cursor()
@@ -75,11 +77,11 @@ class ChromaSemanticSearchEngine(SearchEngine):
             raise ValueError("No documents for ChromaSemanticSearch found.")
         urls, docs = zip(*res.fetchall())
         connection.close()
-        
-        # add database documents to the collection
-        self.collection.upsert(docs, urls) # or add
 
-    def search_db(self, query:str, top_k:int=5):
+        # add database documents to the collection
+        self.collection.upsert(docs, urls)  # or add
+
+    def search_db(self, query: str, top_k: int = 5):
         # throw a warning for empty collections?
         results = self.collection.query(query_texts=[query], n_results=top_k)
 
