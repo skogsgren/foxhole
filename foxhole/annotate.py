@@ -1,8 +1,14 @@
 from collections import defaultdict
 import sqlite3
 from pathlib import Path
+
+import openai
+
 from foxhole.config import DOCPATH
 from foxhole.search import SearchEngine, TFIDFSearchEngine, ChromaSemanticSearchEngine#, BM25SearchEngine
+
+#openai.api_key = "..."  #
+
 
 def build_annotation_pool(
     db_path: Path,
@@ -59,3 +65,31 @@ def build_annotation_pool(
         })
 
     return output
+
+def call_llm(query: str, doc: str, system_prompt: str) -> int:
+    """Call the LLM to get a relevance score for the document.
+    Args:
+        query: The query string.
+        doc: The document string.
+        system_prompt: The system prompt for the LLM.
+    Returns:
+        int: Relevance score (0, 1, or 2).
+    """
+    prompt = f"Query: {query}\n\nDocument:\n{doc}\n\nWhat is the relevance score (0, 1, or 2)?"
+
+    response = openai.ChatCompletion.create(
+        model="o4-mini", # Is this the right model?
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0
+    )
+
+    reply = response["choices"][0]["message"]["content"].strip()
+
+    try:
+        return int(reply[0])  # crude parsing
+    except:
+        print(f"Unexpected response: {reply}")
+        return -1
