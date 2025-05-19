@@ -117,7 +117,7 @@ class ChromaSemanticSearchEngine(SearchEngine): # What is returned? Cosine simil
         # add database documents to the collection
         #self.collection.upsert(docs, urls)  # or add
         self.collection.upsert(
-        ids=[str(i) for i in range(len(docs))],  # unique string IDs
+        ids=[str(i) for i in range(len(docs))],  # unique string IDs - Here we should perhaps use the original IDs from the database??  
         documents=list(docs),
         metadatas=[{"url": url} for url in urls]
     )
@@ -127,6 +127,8 @@ class ChromaSemanticSearchEngine(SearchEngine): # What is returned? Cosine simil
         ids = [int(doc_id) + 1 for doc_id in results["ids"][0]]  # shift index if needed
         scores = results["distances"][0]  # similarity or distance depending on Chroma config
         return ids, scores
+    
+
 
     # def search_db(self, query: str, top_k: int = 5):
     #     # throw a warning for empty collections?

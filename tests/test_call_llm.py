@@ -1,26 +1,37 @@
-import time
 import json
-from foxhole.annotate import call_llm
+from pathlib import Path
+from foxhole.call_llm import annotate_pool,load_text_to_id_map, init_annotation_db
+from foxhole.config import DOCPATH
 
-SYSTEM_PROMPT = "You are an expert annotator trained in TREC-style relevance evaluation." # Or whateever
-
-def annotate_using_llm() -> None:
-    """Annotate using LLM and save to JSON."""
-    # Load annotation pool
-    with open("annotation_pool.json") as f:
-        examples = json.load(f)
-
-    annotated = []
-
-    for i, ex in enumerate(examples):
-        score = call_llm(ex["query"], ex["document"], SYSTEM_PROMPT)
-        annotated.append({**ex, "llm_score": score})
-
-        # Save progress occasionally
-        if i % 10 == 0:
-            with open("llm_annotated.json", "w") as f_out:
-                json.dump(annotated, f_out, indent=2)
-            time.sleep(1)  # let the api breathe
-
+# Configurable paths
+CONTENT_DB_PATH = Path(DOCPATH)
+ANNOTATION_DB_PATH = Path("annotations.db")
+ANNOTATION_POOL_PATH = Path("annotation_pool.json")
+LLM_MODEL = "gpt-3.5-turbo" #We will use some other model later
+SYSTEM_PROMPT = (
+    "You are an expert assessor following TREC-style relevance guidelines. "
+    "You will receive a query and a document. Score the relevance of the document to the query as:\n"
+    "- 0 = Not relevant\n"
+    "- 1 = Somewhat relevant\n"
+    "- 2 = Highly relevant\n"
+    "Reply with just the number."
+)
 if __name__ == "__main__":
-    annotate_using_llm()
+    # Load data
+    text_to_id = load_text_to_id_map(CONTENT_DB_PATH)
+    conn = init_annotation_db(ANNOTATION_DB_PATH)
+
+    with open(ANNOTATION_POOL_PATH) as f:
+        items = json.load(f)
+
+    # Annotate
+    annotate_pool(
+        pool_items=items,
+        text_to_id=text_to_id,
+        annotation_conn=conn,
+        model=LLM_MODEL,
+        system_msg=SYSTEM_PROMPT,
+        sleep_seconds=1.0
+    )
+
+    conn.close()
