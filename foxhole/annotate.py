@@ -1,24 +1,23 @@
 from collections import defaultdict
 import sqlite3
 from pathlib import Path
-from typing import Optional
 from foxhole.config import DOCPATH
 from foxhole.search import SearchEngine, TFIDFSearchEngine, ChromaSemanticSearchEngine#, BM25SearchEngine
-
-from collections import defaultdict
-from pathlib import Path
-from typing import Optional
-import sqlite3
-from foxhole.search import SearchEngine
 
 def build_annotation_pool(
     db_path: Path,
     engines: list[SearchEngine],
     queries: list[str],
     top_k: int = 5,
-    engine_names: Optional[list[str]] = None,
+    engine_names: list[str] | None = None
 ) -> list[dict]:
     """Builds a deduplicated list of (query, document, sources) for annotation.
+    Args:
+        db_path: Path to the SQLite database.
+        engines: List of search engines to use for querying.
+        queries: List of queries to search for.
+        top_k: Number of top results to return from each engine.
+        engine_names: Optional list of names for the engines.
 
     Returns:
         List of dicts with: query, document, url, sources
@@ -35,7 +34,6 @@ def build_annotation_pool(
 
     # Step 2: Build mapping of (query, text) → set of sources
     pair_to_metadata = defaultdict(lambda: {"sources": {}})
-    pair_to_url = {}
 
     for engine, name in zip(engines, engine_names):
         for query in queries:
