@@ -94,7 +94,7 @@ class BM25SearchEngine(SearchEngine):
         pass
         #return f"<BM25SearchEngine: {len(self.urls)} documents indexed>"
 
-class ChromaSemanticSearchEngine(SearchEngine):
+class ChromaSemanticSearchEngine(SearchEngine): # What is returned? Cosine similarities or Euclidean distances?
     """Chroma Semantic Search Engine"""
 
     def __init__(self):
