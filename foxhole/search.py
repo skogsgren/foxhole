@@ -3,6 +3,7 @@
 import sqlite3
 from abc import ABC, abstractmethod
 from pathlib import Path
+import re
 
 from langchain.schema import Document
 from langchain_chroma import Chroma
@@ -74,7 +75,6 @@ class BM25SearchEngine(SearchEngine):
     """BM25 Search Engine"""
     def __init__(self):
         #pip install rank_bm25
-        from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
         self.urls = []
 
     def load_db(self, db_path: Path):
@@ -88,6 +88,7 @@ class BM25SearchEngine(SearchEngine):
         connection.close()
 
         tokenized_docs = [re.findall(r"[\w']+", doc.strip()) for doc in docs]
+        from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
         self.bm25 = BM25Plus(tokenized_docs)
 
     def search_db(self, query:str, top_k:int=5):
