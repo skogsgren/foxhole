@@ -7,16 +7,16 @@ from foxhole.search import SearchEngine, TFIDFSearchEngine, ChromaSemanticSearch
 
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 import sqlite3
 from foxhole.search import SearchEngine
 
 def build_annotation_pool(
     db_path: Path,
-    engines: List[SearchEngine],
-    queries: List[str],
+    engines: list[SearchEngine],
+    queries: list[str],
     top_k: int = 5,
-    engine_names: Optional[List[str]] = None,
+    engine_names: Optional[list[str]] = None,
 ) -> list[dict]:
     """Builds a deduplicated list of (query, document, sources) for annotation.
 
