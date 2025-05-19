@@ -36,28 +36,29 @@ class TFIDFSearchEngine(SearchEngine):
         """Load and index content from a SQLite database"""
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT url, text FROM pages")
+        cursor.execute("SELECT id, url, text FROM pages")
         rows = cursor.fetchall()
         conn.close()
 
         if not rows:
             raise ValueError("No documents found.")
 
-        self.urls, self.docs = zip(*rows)
+        self.ids, self.urls, self.docs = zip(*rows)
         self.tfidf_matrix = self.vectorizer.fit_transform(x.lower() for x in self.docs)
-
     def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]:
         """Search the index for the query, return list of URLs or IDs"""
         if self.tfidf_matrix is None:
             raise ValueError("TF-IDF matrix not initialized. Did you call load_db()?")
+
         query_vector = self.vectorizer.transform([query.lower()])
         similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         top_indices = similarities.argsort()[::-1][:top_k]
-        # we have to add one since sqlite indexes from 1
-        return [i + 1 for i in top_indices], similarities[top_indices]
+
+        return [self.ids[i] for i in top_indices], similarities[top_indices]
 
     def __repr__(self) -> str:
         return f"<TFIDFSearchEngine: {len(self.docs)} documents indexed>"
+
     
 class BM25SearchEngine(SearchEngine):
     """BM25 Search Engine"""

@@ -59,6 +59,21 @@ def save_annotation_pool_json(output_path="annotation_pool.json"):
 
     print(f"Saved {len(output)} annotation pairs to {output_path}")
     
+
+def save_annotation_pool_json2():
+    engines = [TFIDFSearchEngine(), ChromaSemanticSearchEngine()]
+    for engine in engines:
+        engine.load_db(DOCPATH)
+
+    output = build_annotation_pool(DOCPATH, engines, TEST_QUERIES)
+
+    with open("annotation_pool.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+    print(f"Saved {len(output)} annotation pairs to annotation_pool.json")
+
+
+
 if __name__ == "__main__":
     #test_build_annotation_pool()
-    save_annotation_pool_json()
+    #save_annotation_pool_json()
+    save_annotation_pool_json2()
