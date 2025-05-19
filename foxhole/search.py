@@ -57,13 +57,13 @@ class TFIDFSearchEngine(SearchEngine):
             raise ValueError("No documents found.")
 
         self.urls, self.docs = zip(*rows)
-        self.tfidf_matrix = self.vectorizer.fit_transform(self.docs)
+        self.tfidf_matrix = self.vectorizer.fit_transform(x.lower() for x in self.docs)
 
     def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]:
         """Search the index for the query, return list of URLs or IDs"""
         if self.tfidf_matrix is None:
             raise ValueError("TF-IDF matrix not initialized. Did you call load_db()?")
-        query_vector = self.vectorizer.transform([query])
+        query_vector = self.vectorizer.transform([query.lower()])
         similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         top_indices = similarities.argsort()[::-1][:top_k]
         # we have to add one since sqlite indexes from 1
@@ -72,13 +72,35 @@ class TFIDFSearchEngine(SearchEngine):
 
 class BM25SearchEngine(SearchEngine):
     """BM25 Search Engine"""
+    def __init__(self):
+        #pip install rank_bm25
+        from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
+        self.urls = []
 
-    # TODO: Implement
+    def load_db(self, db_path: Path):
+        # read database
+        connection = sqlite3.connect(db_path)
+        cursor = connection.cursor()
+        res = cursor.execute("SELECT url, text FROM pages")
+        if res.fetchone() is None:
+            raise ValueError("No documents for ChromaSemanticSearch found.")
+        self.urls, docs = zip(*res.fetchall())
+        connection.close()
+
+        tokenized_docs = [re.findall(r"[\w']+", doc.strip()) for doc in docs]
+        self.bm25 = BM25Plus(tokenized_docs)
+
+    def search_db(self, query:str, top_k:int=5):
+        if self.urls == []:
+            raise ValueError("No corpus documents found. Did you call load_db()?")
+        # tokenize the query and return top urls
+        tokenized_query = re.findall(r"[\w']+", query.strip())
+        results = self.bm25.get_top_n(tokenized_query, self.urls, n=top_k)
+        return results
 
 
 class ChromaSemanticSearchEngine(SearchEngine):
     """Chroma Semantic Search Engine"""
-
     def __init__(self, doc_path: Path, vec_path: Path):
         super().__init__(doc_path, vec_path)
         self.emb = HuggingFaceEmbeddings(
