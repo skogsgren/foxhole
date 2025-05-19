@@ -1,5 +1,6 @@
 """search.py"""
 
+import re
 import sqlite3
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -61,33 +62,37 @@ class TFIDFSearchEngine(SearchEngine):
 class BM25SearchEngine(SearchEngine):
     """BM25 Search Engine"""
     def __init__(self):
-        #pip install rank_bm25
-        from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
-        self.urls = []
+        # #pip install rank_bm25
+        # from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
+        # self.urls = []
+        pass
 
     def load_db(self, db_path: Path):
-        # read database
-        connection = sqlite3.connect(db_path)
-        cursor = connection.cursor()
-        res = cursor.execute("SELECT url, text FROM pages")
-        if res.fetchone() is None:
-            raise ValueError("No documents for ChromaSemanticSearch found.")
-        self.urls, docs = zip(*res.fetchall())
-        connection.close()
+        pass
+        # # read database
+        # connection = sqlite3.connect(db_path)
+        # cursor = connection.cursor()
+        # res = cursor.execute("SELECT url, text FROM pages")
+        # if res.fetchone() is None:
+        #     raise ValueError("No documents for ChromaSemanticSearch found.")
+        # self.urls, docs = zip(*res.fetchall())
+        # connection.close()
 
-        tokenized_docs = [re.findall(r"[\w']+", doc.strip()) for doc in docs]
-        self.bm25 = BM25Plus(tokenized_docs)
+        # tokenized_docs = [re.findall(r"[\w']+", doc.strip()) for doc in docs]
+        # self.bm25 = BM25Plus(tokenized_docs)
 
     def search_db(self, query:str, top_k:int=5):
-        if self.urls == []:
-            raise ValueError("No corpus documents found. Did you call load_db()?")
-        # tokenize the query and return top urls
-        tokenized_query = re.findall(r"[\w']+", query.strip())
-        results = self.bm25.get_top_n(tokenized_query, self.urls, n=top_k)
-        return results
+        pass
+        # if self.urls == []:
+        #     raise ValueError("No corpus documents found. Did you call load_db()?")
+        # # tokenize the query and return top urls
+        # tokenized_query = re.findall(r"[\w']+", query.strip())
+        # results = self.bm25.get_top_n(tokenized_query, self.urls, n=top_k)
+        # return results
 
     def __repr__(self) -> str:
-        return f"<BM25SearchEngine: {len(self.urls)} documents indexed>"
+        pass
+        #return f"<BM25SearchEngine: {len(self.urls)} documents indexed>"
 
 class ChromaSemanticSearchEngine(SearchEngine):
     """Chroma Semantic Search Engine"""
@@ -109,13 +114,24 @@ class ChromaSemanticSearchEngine(SearchEngine):
         connection.close()
 
         # add database documents to the collection
-        self.collection.upsert(docs, urls)  # or add
+        #self.collection.upsert(docs, urls)  # or add
+        self.collection.upsert(
+        ids=[str(i) for i in range(len(docs))],  # unique string IDs
+        documents=list(docs),
+        metadatas=[{"url": url} for url in urls]
+    )
 
-    def search_db(self, query: str, top_k: int = 5):
-        # throw a warning for empty collections?
+    def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]: # Updated to match abstract method (->tuple..)
         results = self.collection.query(query_texts=[query], n_results=top_k)
+        ids = [int(doc_id) + 1 for doc_id in results["ids"][0]]  # shift index if needed
+        scores = results["distances"][0]  # similarity or distance depending on Chroma config
+        return ids, scores
 
-        return results
+    # def search_db(self, query: str, top_k: int = 5):
+    #     # throw a warning for empty collections?
+    #     results = self.collection.query(query_texts=[query], n_results=top_k)
+
+    #     return results
     
     def __repr__(self) -> str:
         return f"<ChromaSemanticSearchEngine: {self.collection.count()} documents indexed>"
