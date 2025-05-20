@@ -2,8 +2,8 @@ from collections import defaultdict
 import sqlite3
 from pathlib import Path
 
-from foxhole.config import DOCPATH
-from foxhole.search import SearchEngine, TFIDFSearchEngine, ChromaSemanticSearchEngine#, BM25SearchEngine
+from foxhole.config import DOCPATH, VECPATH
+from foxhole.search import SearchEngine, TFIDFSearchEngine, ChromaSemanticSearchEngine
 
 
 def build_annotation_pool(
@@ -11,7 +11,7 @@ def build_annotation_pool(
     engines: list[SearchEngine],
     queries: list[str],
     top_k: int = 5,
-    engine_names: list[str] | None = None
+    engine_names: list[str] | None = None,
 ) -> list[dict]:
     """Builds a deduplicated list of (query, document, sources) for annotation.
     Args:
@@ -42,25 +42,25 @@ def build_annotation_pool(
             try:
                 doc_ids, _ = engine.search_db(query, top_k=top_k)
                 for rank, doc_id in enumerate(doc_ids):
-                    info = doc_info.get(doc_id)
-                    if info:
-                        key = (query, info["text"])
-                        pair_to_metadata[key]["sources"][name] = rank + 1  # 1-based
-                        pair_to_metadata[key]["url"] = info["url"]
-                        pair_to_metadata[key]["id"] = doc_id
+                    info = doc_info[doc_id]
+                    key = (query, info["text"])
+                    pair_to_metadata[key]["sources"][name] = rank + 1  # 1-based
+                    pair_to_metadata[key]["url"] = info["url"]
+                    pair_to_metadata[key]["id"] = doc_id
             except Exception as e:
                 print(f"Error in engine {name} for query '{query}': {e}")
 
     # 3: Return output
     output = []
     for (query, text), meta in pair_to_metadata.items():
-        output.append({
-            "query": query,
-            "document": text,
-            "url": meta["url"],
-            "id": meta["id"],
-            "sources": meta["sources"]
-        })
-
+        output.append(
+            {
+                "query": query,
+                "document": text,
+                "url": meta["url"],
+                "id": meta["id"],
+                "sources": meta["sources"],
+            }
+        )
 
     return output
