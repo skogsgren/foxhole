@@ -1,6 +1,7 @@
 import sqlite3
 import time
 from pathlib import Path
+
 import openai
 
 
@@ -37,17 +38,20 @@ def call_llm(query: str, document: str, model: str, system_msg: str) -> int:
         model=model,
         messages=[
             {"role": "system", "content": system_msg},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ],
-        temperature=0
+        temperature=0,
     )
 
-    reply = response.choices[0].message.content.strip()
+    reply = response.choices[0].message.content
+    assert reply
+    reply = reply.strip()
     try:
         return int(reply[0])
     except Exception:
         print(f"Unexpected reply: {reply}")
         return -1
+
 
 def annotate_pool(
     pool_items: list[dict],
@@ -55,7 +59,7 @@ def annotate_pool(
     annotation_conn: sqlite3.Connection,
     model: str,
     system_msg: str,
-    sleep_seconds: float = 1.0
+    sleep_seconds: float = 1.0,
 ) -> None:
     """Annotate the (query, document) pairs using an LLM and store in SQLite."""
     cursor = annotation_conn.cursor()
@@ -76,10 +80,9 @@ def annotate_pool(
 
         cursor.execute(
             "INSERT INTO annotations (query, id, label) VALUES (?, ?, ?)",
-            (query, doc_id, score)
+            (query, doc_id, score),
         )
         annotation_conn.commit()
 
         print(f"Annotated [{i + 1}/{len(pool_items)}] — score: {score}")
         time.sleep(sleep_seconds)
-
