@@ -1,5 +1,6 @@
 """search.py"""
 
+import re
 import sqlite3
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -35,6 +36,9 @@ class SearchEngine(ABC):
         """Search the index for the query, return a tuple[indices, scores]"""
         pass
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>"
+
 
 class TFIDFSearchEngine(SearchEngine):
     def __init__(self, doc_path: Path, vec_path: Path) -> None:
@@ -50,14 +54,14 @@ class TFIDFSearchEngine(SearchEngine):
         """Load and index content from a SQLite database"""
         conn = sqlite3.connect(self.doc_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT url, text FROM pages")
+        cursor.execute("SELECT id, url, text FROM pages")
         rows = cursor.fetchall()
         conn.close()
 
         if not rows:
             raise ValueError("No documents found.")
 
-        self.urls, self.docs = zip(*rows)
+        self.ids, self.urls, self.docs = zip(*rows)
         self.tfidf_matrix = self.vectorizer.fit_transform(x.lower() for x in self.docs)
 
     def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]:
@@ -67,31 +71,38 @@ class TFIDFSearchEngine(SearchEngine):
         query_vector = self.vectorizer.transform([query.lower()])
         similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         top_indices = similarities.argsort()[::-1][:top_k]
-        # we have to add one since sqlite indexes from 1
-        return [i + 1 for i in top_indices], similarities[top_indices]
+
+        return [self.ids[i] for i in top_indices], similarities[top_indices]
+
+    def __repr__(self) -> str:
+        return f"<TFIDFSearchEngine: {len(self.docs)} documents indexed>"
 
 
 class BM25SearchEngine(SearchEngine):
     """BM25 Search Engine"""
-    def __init__(self):
-        #pip install rank_bm25
-        self.urls = []
 
-    def load_db(self, db_path: Path):
+    def __init__(self, doc_path: Path, vec_path: Path):
+        super().__init__(doc_path, vec_path)
+
+        # #pip install rank_bm25
+        # from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
+        self.urls = []
+        pass
+
+    def __repr__(self) -> str:
+        return f"<BM25SearchEngine: {len(self.urls)} documents indexed>"
+
+    def load_db(self):
         # read database
-        connection = sqlite3.connect(db_path)
+        connection = sqlite3.connect(self.doc_path)
         cursor = connection.cursor()
         res = cursor.execute("SELECT url, text FROM pages")
         if res.fetchone() is None:
             raise ValueError("No documents for ChromaSemanticSearch found.")
-        self.urls, docs = zip(*res.fetchall())
+        self.urls, self.docs = zip(*res.fetchall())
         connection.close()
 
-        tokenized_docs = [re.findall(r"[\w']+", doc.strip()) for doc in docs]
-        from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
-        self.bm25 = BM25Plus(tokenized_docs)
-
-    def search_db(self, query:str, top_k:int=5):
+    def search_db(self, query: str, top_k: int = 5):
         if self.urls == []:
             raise ValueError("No corpus documents found. Did you call load_db()?")
         # tokenize the query and return top urls
@@ -102,6 +113,7 @@ class BM25SearchEngine(SearchEngine):
 
 class ChromaSemanticSearchEngine(SearchEngine):
     """Chroma Semantic Search Engine"""
+
     def __init__(self, doc_path: Path, vec_path: Path):
         super().__init__(doc_path, vec_path)
         self.emb = HuggingFaceEmbeddings(
@@ -122,7 +134,8 @@ class ChromaSemanticSearchEngine(SearchEngine):
     def _filter_docs(self, docs: list[Document]) -> list[Document]:
         """given documents, returns documents not already in chroma database"""
         db = Chroma(persist_directory=str(self.vec_path), embedding_function=self.emb)
-        return [doc for doc in docs if not db.get(where={"id": doc.metadata["id"]})]
+        ids = set([x["id"] for x in db.get()["metadatas"]])
+        return [doc for doc in docs if doc.metadata["id"] not in ids]
 
     def load_db(self):
         """reads document database, creates/updates chroma vector db"""
