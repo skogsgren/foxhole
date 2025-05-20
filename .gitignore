@@ -175,5 +175,8 @@ cython_debug/
 
 
 *.swp
-eval/*.db
-eval/*.json
+benchmark_scripts/*.db
+benchmark_scripts/*.json
+benchmark_scripts/data/doc.db
+benchmark_scripts/data/vec.chroma/
+benchmark_scripts/out/
