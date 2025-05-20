@@ -134,7 +134,8 @@ class ChromaSemanticSearchEngine(SearchEngine):
     def _filter_docs(self, docs: list[Document]) -> list[Document]:
         """given documents, returns documents not already in chroma database"""
         db = Chroma(persist_directory=str(self.vec_path), embedding_function=self.emb)
-        return [doc for doc in docs if not db.get(where={"id": doc.metadata["id"]})]
+        ids = set([x["id"] for x in db.get()["metadatas"]])
+        return [doc for doc in docs if doc.metadata["id"] not in ids]
 
     def load_db(self):
         """reads document database, creates/updates chroma vector db"""
