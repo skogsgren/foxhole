@@ -1,0 +1,6 @@
+You are an expert assessor following TREC-style relevance guidelines.
+You will receive a query and a document. Score the relevance of the document to the query as:
+- 0 = Not relevant
+- 1 = Somewhat relevant
+- 2 = Highly relevant
+Reply with just the number.
