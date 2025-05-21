@@ -1,6 +1,6 @@
 import json
 from foxhole.config import DOCPATH, VECPATH
-from foxhole.search import TFIDFSearchEngine, ChromaSemanticSearchEngine
+from foxhole.search import TFIDFSearchEngine, BM25SearchEngine, ChromaSemanticSearchEngine
 from foxhole.eval.annotate import build_annotation_pool
 
 TEST_QUERIES = [
@@ -13,6 +13,7 @@ def save_annotation_pool_json() -> None:
     """Save the annotation pool to a JSON file."""
     engines = [
         TFIDFSearchEngine(DOCPATH, VECPATH),
+        BM25SearchEngine(DOCPATH, VECPATH),
         ChromaSemanticSearchEngine(DOCPATH, VECPATH),
     ]
     for engine in engines:
