@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
 # PILOT STUDY EVALUATION SCRIPT
-# IF YOU ARE CONFUSED, READ IT LIKE A BASH SCRIPT GIT?
+# IF YOU ARE CONFUSED, READ IT LIKE A BASH SCRIPT, YA GIT?
 
 import argparse
 import json
 from pathlib import Path
 
+from ir_measures import nDCG, MAP
 from foxhole.eval import llm, metrics
+from foxhole.eval.metrics import Evaluator
 from foxhole.eval.annotate import annotate_sqlite, build_annotation_pool
 from foxhole.search import (
     BM25SearchEngine,
@@ -30,6 +32,8 @@ SLEEP_SECONDS = 1
 POOL_OUT = OUT / "00_pool.json"
 LLM_OUT = OUT / "01_llm.db"
 MAN_OUT = OUT / "01_man.db"
+LLM_XRELS = OUT / "02_llm_xrels.json"
+MAN_XRELS = OUT / "02_man_xrels.json"
 
 # define reset argparse
 parser = argparse.ArgumentParser()
@@ -99,3 +103,16 @@ annotate_sqlite(inp=POOL_OUT, out=MAN_OUT)
 # interannotator agreement
 ia = metrics.interannotator_agreement(MAN_OUT, LLM_OUT)
 print(ia)
+
+# calculate metrics (because why not?)
+metrics.export_xrels(MAN_OUT, MAN_XRELS)
+metrics.export_xrels(LLM_OUT, LLM_XRELS)
+
+for xrel in [MAN_XRELS, LLM_XRELS]:
+    print(f"= EVALUATING FOR {xrel.name}")
+    evaluator = Evaluator(xrel, POOL_OUT)
+    results = evaluator.evaluate([nDCG @ TOPK, MAP])
+    for s, m in results.items():
+        print(f"System: {s}")
+        for mt, value in m.items():
+            print(f"  {mt}: {value:.4f}")
