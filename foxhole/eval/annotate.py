@@ -1,4 +1,5 @@
 import sqlite3
+import json
 import tkinter as tk
 from collections import defaultdict
 from pathlib import Path
@@ -6,67 +7,41 @@ from pathlib import Path
 from ..search import SearchEngine
 
 
-def annotate_sqlite(input_path: Path, output_path: Path):
+def annotate_sqlite(inp: Path | dict, out: Path):
     """simple tkinter interface for manual annotation"""
-    input_conn = sqlite3.connect(input_path)
-    input_conn.row_factory = sqlite3.Row
-    input_cur = input_conn.cursor()
-    input_cur.execute("SELECT * FROM results")
-    rows = list(input_cur.fetchall())
-
-    if not output_path.exists():
-        out_conn = sqlite3.connect(output_path)
+    rows = json.loads(inp.read_text()) if isinstance(inp, Path) else inp
+    if not out.exists():
+        out_conn = sqlite3.connect(out)
         out_conn.execute("""
             CREATE TABLE annotations (
                 query TEXT,
-                system TEXT,
-                id TEXT,
-                title TEXT,
-                text TEXT,
-                url TEXT,
-                rank INTEGER,
-                label TEXT,
-                annotation_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                UNIQUE (query, system, id)
-            )
-        """)
+                id INTEGER,
+                label INTEGER,
+                annotation_id INTEGER PRIMARY KEY AUTOINCREMENT
+        )""")
         out_conn.commit()
         out_conn.close()
-
-    output_conn = sqlite3.connect(output_path)
+    output_conn = sqlite3.connect(out)
     output_conn.row_factory = sqlite3.Row
     output_cur = output_conn.cursor()
-    output_cur.execute("SELECT query, system, id FROM annotations")
-    existing_keys = set(
-        (r["query"], r["system"], r["id"]) for r in output_cur.fetchall()
-    )
+    output_cur.execute("SELECT query, id FROM annotations")
 
-    filtered_rows = [
-        r for r in rows if (r["query"], r["system"], r["id"]) not in existing_keys
-    ]
+    existing_keys = set((r["query"], r["id"]) for r in output_cur.fetchall())
+    filtered_rows = [r for r in rows if (r["query"], r["id"]) not in existing_keys]
+    if not filtered_rows:
+        print("no rows left to annotate!")
+        return
 
     current = {"index": 0}
 
     def next_entry(label):
-        idx = current["index"]
-        row = filtered_rows[idx]
-        row = dict(row)
-        row["label"] = label
+        row = dict(filtered_rows[current["index"]])
         output_cur.execute(
             """
-            INSERT INTO annotations (query, system, id, title, text, url, rank, label)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO annotations (query, id, label)
+            VALUES (?, ?, ?)
             """,
-            (
-                row["query"],
-                row["system"],
-                row["id"],
-                row["title"],
-                row["text"],
-                row["url"],
-                row["rank"],
-                row["label"],
-            ),
+            (row["query"], int(row["id"]), int(label)),
         )
         output_conn.commit()
         current["index"] += 1
@@ -81,7 +56,7 @@ def annotate_sqlite(input_path: Path, output_path: Path):
         query_label.config(text=f"Query: {filtered_rows[idx]['query']}")
         title_label.config(text=f"Title: {filtered_rows[idx]['title']}")
         text_box.delete(1.0, tk.END)
-        text_box.insert(tk.END, filtered_rows[idx]["text"])
+        text_box.insert(tk.END, filtered_rows[idx]["document"])
         progress_label.config(text=f"{idx} / {len(filtered_rows)}")
 
     def on_key_press(event):
@@ -155,7 +130,7 @@ def build_annotation_pool(
         engine_names: Optional list of names for the engines.
 
     Returns:
-        List of dicts with: query, document, url, sources
+        List of dicts with: query, document, url, sources, title
     """
     if engine_names is None:
         engine_names = [e.__class__.__name__ for e in engines]
@@ -163,8 +138,11 @@ def build_annotation_pool(
     # 1:Load id → (text, url)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, text, url FROM pages")
-    doc_info = {row[0]: {"text": row[1], "url": row[2]} for row in cursor.fetchall()}
+    cursor.execute("SELECT id, text, url, title FROM pages")
+    doc_info = {
+        row[0]: {"text": row[1], "url": row[2], "title": row[3]}
+        for row in cursor.fetchall()
+    }
     conn.close()
 
     # Step 2: Build mapping of (query, text) → set of sources
@@ -178,6 +156,7 @@ def build_annotation_pool(
                 key = (query, info["text"])
                 pair_to_metadata[key]["sources"][name] = rank + 1  # 1-based
                 pair_to_metadata[key]["url"] = info["url"]
+                pair_to_metadata[key]["title"] = info["title"]
                 pair_to_metadata[key]["id"] = doc_id
 
     # 3: Return output
@@ -188,6 +167,7 @@ def build_annotation_pool(
                 "query": query,
                 "document": text,
                 "url": meta["url"],
+                "title": meta["title"],
                 "id": meta["id"],
                 "sources": meta["sources"],
             }
