@@ -1,0 +1,112 @@
+= ANNOTATION GUIDELINES
+
+The basic premise around this type of annotation is simple: reflect
+the experience of skimming an article one day, and trying to remember
+it three months later. Are the retrieved documents _relevant_ to your
+idea of what the article was about?
+
+There are three labels: (0) Not relevant, (1) Relevant, (2) Highly
+relevant.  What is relevant and what is the distinction between (1)
+and (2)? Very basic definition:
+
+    Relevant means that the _majority_ of the query is contained
+    _semantically_ in the text/title of the document.
+
+    The distinction between highly relevant and just relevant is
+    that for highly relevant documents all parts of the query has to
+    be in the document.
+
+I refer to the examples below for how this would look like.
+
+Be lenient, I think, on judgments. In other words, if the query is ---
+say --- conspiracy theory and the document is the Wikipedia article
+for _The DaVinci Code_, then that is relevant (fight me!)[^1].
+Preferably since false positives are of lesser importance than false
+negatives for this testset.
+
+These basic rules are problematic, however (which annotation
+guidelines aren't?). Some exceptions off the top of my head of edge
+cases:
+
+    "conspiracy theory" is one semantic "unit". Technically I wouldn't
+    say the Wikipedia article is Highly relevant for this query, as it
+    is mainly about a book (which touches on conspiracy theories about
+    Christianity). I would therefore label it as "Relevant" not
+    "Highly Relevant".
+
+---
+
+[^1]: Well, don't really fight me, it's not I like the book that much
+      or anything.
+
+== EXAMPLES:
+
+query:
+    psychology change yourself
+doc_title:
+    chunking_evaluation/chunking_evaluation/evalua...
+doc_text:
+    = Valkyria Chronicles III = Senjō no Valkyria 3 : Chronicles (
+    Japanese : 戦場のヴァルキュリア3 , lit . Valkyria of the
+    Battlefield 3) , commonly referred to as Valkyria Chronicles III
+    outside Japan , is a tactical role ...
+label:
+    Not relevant
+
+query:
+    python library type checker
+doc_title:
+    Type Checking in Compiler Design
+doc_text:
+    Type checking is the process of checking and enforcing the
+    constraints of types assigned to values in a program. A compiler
+    has to check that a source program conforms both to the syntactic
+    and semantic rules of the language as well as its type rules. The
+    process also helps in limiting the kinds of types that can be used
+    in certain contexts, assigning types to values, and then checking
+    that these values are used appropriately.
+    ...
+label:
+    Relevant (is about typechecking, but not any mention of python)
+
+query:
+    apple email
+doc_title:
+    From: Steve Jobs. "Great idea, thank you."
+doc_text:
+    Now that I’ve been retired for a couple of days, I think I can
+    finally tell this story of how I was – very briefly – steve@next.com
+
+    And Steve Jobs sent me an email saying “Great idea, thank you."
+
+    Wait, what? What was the great idea?
+    ...
+label:
+    Highly Relevant (Apple->Steve Jobs, Email->email)
+
+
+= ANNOTATION INSTRUCTIONS
+
+    python3 -m foxhole.annotate -i /path/to/eval_dataset.tsv -o /path/to/output.tsv
+
+This runs a basic tkinter interface for annotation where you can see:
+
+- ID: current document ID
+- query: the query used to get the document
+- text: the text of the document in question
+- Not relevant/Relevant: buttons to label a document
+- IDX/TOTAL: a basic counter to indicate current progress.
+
+You can annotate using the keyboard as well, with 0 labelling
+something as not relevant, 1 relevant, and 2 highly relevant.
+
+If you accidentally label something incorrectly, just exit the program
+(it saves automatically), and remove the latest inputted row using the
+following SQL query:
+
+    DELETE FROM annotations WHERE annotation_id = (SELECT MAX(annotation_id) FROM annotations);
+
+Do this from the command line using e.g.
+
+    sqlite3 /path/to/annotations.db \
+        "DELETE FROM annotations WHERE annotation_id = (SELECT MAX(annotation_id) FROM annotations);"
