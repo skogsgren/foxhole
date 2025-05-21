@@ -112,7 +112,7 @@ class BM25SearchEngine(SearchEngine):
         scores = self.bm25.get_scores(tokenized_query)
         tops = sorted(zip(self.ids, scores), reverse=True, key=lambda z:z[1])[:top_k]
         top_ids, top_scores = zip(*tops)
-        return top_ids, top_scores
+        return list(top_ids), [float(score) for score in top_scores]
 
 
 class ChromaSemanticSearchEngine(SearchEngine):
