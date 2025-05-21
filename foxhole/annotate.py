@@ -40,11 +40,14 @@ def build_annotation_pool(
     for engine, name in zip(engines, engine_names):
         for query in queries:
             try:
-                doc_ids, _ = engine.search_db(query, top_k=top_k)
-                for rank, doc_id in enumerate(doc_ids):
+                doc_ids, scores = engine.search_db(query, top_k=top_k)
+                for rank, (doc_id, score) in enumerate(zip(doc_ids, scores), start=1):
                     info = doc_info[doc_id]
                     key = (query, info["text"])
-                    pair_to_metadata[key]["sources"][name] = rank + 1  # 1-based
+                    pair_to_metadata[key]["sources"][name] = {
+                        "rank": rank,
+                        "score": float(score)
+                    }  # 1-based
                     pair_to_metadata[key]["url"] = info["url"]
                     pair_to_metadata[key]["id"] = doc_id
             except Exception as e:
