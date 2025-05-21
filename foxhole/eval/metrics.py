@@ -22,6 +22,19 @@ def interannotator_agreement(man: Path, llm: Path) -> float:
     return cohen_kappa_score(man_labels, llm_labels)
 
 
+def export_xrels(annotations: Path, out: Path):
+    conn = sqlite3.connect(annotations)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    qrels = defaultdict(dict)
+    cur.execute("SELECT * FROM annotations;")
+    for ann in cur.fetchall():
+        qrels[ann["query"]][ann["id"]] = ann["label"]
+    with open(out, "w") as f:
+        json.dump(qrels, f)
+    conn.close()
+
+
 class Evaluator:
     """A class to evaluate the performance of a retrieval system using various IR metrics."""
 
