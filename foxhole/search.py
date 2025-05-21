@@ -83,11 +83,8 @@ class BM25SearchEngine(SearchEngine):
 
     def __init__(self, doc_path: Path, vec_path: Path):
         super().__init__(doc_path, vec_path)
-
-        # #pip install rank_bm25
-        # from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
-        self.urls = []
-        pass
+        
+        self.ids = []
 
     def __repr__(self) -> str:
         return f"<BM25SearchEngine: {len(self.urls)} documents indexed>"
@@ -96,19 +93,26 @@ class BM25SearchEngine(SearchEngine):
         # read database
         connection = sqlite3.connect(self.doc_path)
         cursor = connection.cursor()
-        res = cursor.execute("SELECT url, text FROM pages")
+        res = cursor.execute("SELECT id,url,text FROM pages;")
         if res.fetchone() is None:
             raise ValueError("No documents for ChromaSemanticSearch found.")
-        self.urls, self.docs = zip(*res.fetchall())
+        self.ids, urls, docs = zip(*res.fetchall())
         connection.close()
 
-    def search_db(self, query: str, top_k: int = 5):
-        if self.urls == []:
+        tokenized_docs = [re.findall(r"[\w']+", doc.strip()) for doc in docs]
+        #pip install rank_bm25
+        from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
+        self.bm25 = BM25Plus(tokenized_docs)
+
+    def search_db(self, query:str, top_k:int=5):
+        if self.ids == []:
             raise ValueError("No corpus documents found. Did you call load_db()?")
         # tokenize the query and return top urls
         tokenized_query = re.findall(r"[\w']+", query.strip())
-        results = self.bm25.get_top_n(tokenized_query, self.urls, n=top_k)
-        return results
+        scores = self.bm25.get_scores(tokenized_query)
+        tops = sorted(zip(self.ids, scores), reverse=True, key=lambda z:z[1])[:top_k]
+        top_ids, top_scores = zip(*tops)
+        return top_ids, top_scores
 
 
 class ChromaSemanticSearchEngine(SearchEngine):
