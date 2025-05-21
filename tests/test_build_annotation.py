@@ -1,7 +1,7 @@
 import json
 from foxhole.config import DOCPATH, VECPATH
 from foxhole.search import TFIDFSearchEngine, ChromaSemanticSearchEngine
-from foxhole.annotate import build_annotation_pool
+from foxhole.eval.annotate import build_annotation_pool
 
 TEST_QUERIES = [
     "machine learning",

@@ -1,3 +1,6 @@
+#!/usr/bin/env/python
+__doc__ = """concatenate sqlite files"""
+
 import argparse
 import sqlite3
 from pathlib import Path
