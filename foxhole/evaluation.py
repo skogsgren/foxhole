@@ -1,32 +1,44 @@
+"""evaluation.py"""
+from collections import defaultdict
 import json
 from pathlib import Path
-from ir_measures import Measure, Run, nDCG, MAP, Precision, Recall
-
+from ir_measures import Measure, calc_aggregate, Qrel, nDCG, MAP, Precision, Recall
 
 
 class Evaluation:
     """A class to evaluate the performance of a retrieval system using various IR metrics.
     """
 
-    def __init__(self, qrels_path: Path):
+    def __init__(self, qrels_path: Path, annotation_pool_path: Path):
+        """Initializes the Evaluation class with the paths to the qrels and annotation pool files."""
         self.qrels = self._load_qrels(qrels_path)
+        self.runs = self._extract_runs(annotation_pool_path)
 
-    def _load_qrels(self, qrels_path: Path) -> dict[str, dict[str, int]]:
-        """Load the qrels from a JSON file."""
-        with open(qrels_path, 'r') as f:
-            qrels = json.load(f)
-        return {k: {str(k): v for k, v in v.items()} for k, v in qrels.items()}
+    def _load_qrels(self, path: Path) -> dict:
+        """Loads the qrels from a JSON file."""
+        with open(path, "r") as f:
+            return json.load(f)
+
+    def _extract_runs(self, path: Path) -> dict[str, dict[str, float]]:
+        """Builds run dict per system: system_name -> {query -> {doc_id: score}}"""
+        with open(path, "r") as f:
+            pool = json.load(f)
+
+        systems = defaultdict(lambda: defaultdict(dict))
+        for entry in pool:
+            query = entry["query"]
+            doc_id = str(entry["id"])
+            for system, metadata in entry["sources"].items():
+                systems[system][query][doc_id] = float(metadata["score"])
+        return systems
 
 
-    def add_run(self, system_name: str, run_dict: dict[str, list[tuple[int, float]]]): #a tuple of doc_id and score(int or float?) 
-        """Convert IR system output to ir_measures.Run format."""
-        runs = []
-        for query, ranked_docs in run_dict.items():
-            for rank, (doc_id, score) in enumerate(ranked_docs, start=1):
-                runs.append(Run(query_id=query, doc_id=str(doc_id), rank=rank, score=score))
-        self.runs[system_name] = runs
+    def evaluate(self, metrics: list) -> dict[str, dict[str, float]]:
+        """Evaluates the runs using the provided metrics."""
+        results = {}
+        for system, run in self.runs.items():
+            scores = calc_aggregate(metrics, self.qrels, run)
+            results[system] = {str(metric): score for metric, score in scores.items()}
+        return results
 
-    def evaluate(self, metrics: list[Measure]) -> dict[str, dict[str, float]]:
-        """Evaluate the run data using the specified metrics and return the results."""
-        pass
 
