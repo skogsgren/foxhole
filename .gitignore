@@ -177,9 +177,9 @@ cython_debug/
 *.swp
 benchmark_scripts/*.db
 benchmark_scripts/*.json
-benchmark_scripts/data/doc.db
-benchmark_scripts/data/vec.chroma/
-benchmark_scripts/out/
+benchmark_scripts/*/doc.db
+benchmark_scripts/*/vec.chroma/
+benchmark_scripts/*out/
 
 *.db
 
