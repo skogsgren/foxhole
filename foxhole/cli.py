@@ -12,10 +12,10 @@ def check_method(search_method:str, search_methods:list):
         raise TypeError("ERROR: Search method must be out of", search_methods)
     return search_method
 
-def select_model(i:int):
-    if i == 1: se = search.TFIDFSearchEngine()
-    if i == 2: se = search.BM25SearchEngine()
-    if i == 3: se = search.ChromaSemanticSearchEngine()
+def select_model(i:int, doc_path, vec_path):
+    if i == 1: se = search.TFIDFSearchEngine(doc_path, vec_path)
+    if i == 2: se = search.BM25SearchEngine(doc_path, vec_path)
+    if i == 3: se = search.ChromaSemanticSearchEngine(doc_path, vec_path)
     return se
 
 
@@ -31,23 +31,29 @@ def main():
         raise TypeError("ERROR: No valid path to a .db file provided!")
     print("Database file", db_path, "selected.")
 
+    # get vec file name from command line
+    try:
+        vec_path = Path(sys.argv[2])
+    except:
+        raise TypeError("ERROR: No 2nd path (to vec) provided at all!")
+    print("Vector file", vec_path, "selected.")
 
     # try getting optional top_k
     k_provided = False
     try:
-        if sys.argv[2][:3] == "top":
-            top_k = int(sys.argv[2][3:])
+        if sys.argv[3][:3] == "top":
+            top_k = int(sys.argv[3][3:])
             k_provided = True
             print("top_k =", top_k)
     except:
-        pass
+        print("top_k not specified, using default")
 
     interactive = False
 
     # select search method to be used
     search_methods = ("TFIDF", "BM25", "ChromaSemantic")
     try:
-        search_method = check_method(sys.argv[2+int(k_provided)], search_methods)
+        search_method = check_method(sys.argv[3+int(k_provided)], search_methods)
         method_provided = True
         print("Search method", search_method, "selected.")
     except:
@@ -55,18 +61,17 @@ def main():
         method_provided = False
         interactive = True
         print("No search method selected.")
-    
+
     if method_provided:
-        se = select_model(search_methods.index(search_method)+1)
-        se.load_db(db_path)
-    
+        se = select_model(search_methods.index(search_method)+1, db_path, vec_path)
+        se.load_db()
 
     # try getting query from command line or start interactive mode
-    if not interactive:
-        try:
-            query = " ".join(sys.argv[3+int(k_provided):])
-        except:
-            interactive = True
+    try:
+        _ = sys.argv[4+int(k_provided)]
+        query = " ".join(sys.argv[4+int(k_provided):])
+    except:
+        interactive = True
 
     # conduct the search and print the results
     if not interactive:
@@ -79,11 +84,16 @@ def main():
     else: # interactive input loop
         while True:
             if not method_provided:
-                user_input = input("Select search method:\n")
-                search_method = check_method(user_input, search_methods)
+                user_input = input("Select search method or enter 'q' to quit:\n")
+                if user_input == "q":
+                    break
+                try: search_method = check_method(user_input, search_methods)
+                except Exception as e:
+                    print(e)
+                    continue
                 print("Search method", search_method, "selected.")
-                se = select_model(search_methods.index(search_method)+1)
-                se.load_db(db_path)
+                se = select_model(search_methods.index(search_method)+1, db_path, vec_path)
+                se.load_db()
 
             user_input = input("Type whatever query or enter 'q' to quit:\n")
             if user_input == "q":
@@ -100,4 +110,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
