@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# PILOT STUDY EVALUATION SCRIPT
+# PRE-PILOT STUDY EVALUATION SCRIPT
 # IF YOU ARE CONFUSED, READ IT LIKE A BASH SCRIPT, YA GIT?
 
 import argparse
@@ -18,7 +18,7 @@ from foxhole.search import (
 )
 
 # define constants
-DATA = Path("./data")
+DATA = Path("./00-data")
 QUERIESPATH = DATA / "queries.tsv"
 DOCPATH = DATA / "doc.db"
 VECPATH = DATA / "vec.chroma"
@@ -28,7 +28,7 @@ LLM_MODEL = "gpt-4.1-nano"
 PROMPT = (DATA / "prompt.txt").read_text()
 SLEEP_SECONDS = 1
 
-(OUT := Path("./out")).mkdir(exist_ok=True)
+(OUT := Path("./01_prepilot_out")).mkdir(exist_ok=True)
 POOL_OUT = OUT / "00_pool.json"
 LLM_OUT = OUT / "01_llm.db"
 MAN_OUT = OUT / "01_man.db"
@@ -48,9 +48,10 @@ if args.reset:
     LLM_OUT.unlink(missing_ok=True)
     POOL_OUT.unlink(missing_ok=True)
 
-# load queries for pilot study, five queries should be enough
+# load queries for prepilot study
 with open(QUERIESPATH) as f:
-    queries = [line.split("\t")[0].strip() for line in f][3:4]
+    queries = [line.split("\t")[0].strip() for line in f][1:4]
+    print(f"{queries=}")
 
 if not POOL_OUT.exists():
     # NOTE: BM-25 currently non-functional
