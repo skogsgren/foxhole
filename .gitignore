@@ -176,3 +176,7 @@ cython_debug/
 
 *.swp
 *.db
+
+# Some json files - Should we do *.json?
+annotation_pool.json
+xrels.json

@@ -2,7 +2,7 @@
 from collections import defaultdict
 import json
 from pathlib import Path
-from ir_measures import Measure, calc_aggregate, Qrel, nDCG, MAP, Precision, Recall
+from ir_measures import calc_aggregate, nDCG, MAP, Precision, Recall
 
 
 class Evaluation:
