@@ -130,7 +130,7 @@ def build_annotation_pool(
         engine_names: Optional list of names for the engines.
 
     Returns:
-        List of dicts with: query, document, url, sources, title
+        List of dicts with: query, document, url, sources
     """
     if engine_names is None:
         engine_names = [e.__class__.__name__ for e in engines]
@@ -150,14 +150,20 @@ def build_annotation_pool(
 
     for engine, name in zip(engines, engine_names):
         for query in queries:
-            doc_ids, _ = engine.search_db(query, top_k=top_k)
-            for rank, doc_id in enumerate(doc_ids):
-                info = doc_info[doc_id]
-                key = (query, info["text"])
-                pair_to_metadata[key]["sources"][name] = rank + 1  # 1-based
-                pair_to_metadata[key]["url"] = info["url"]
-                pair_to_metadata[key]["title"] = info["title"]
-                pair_to_metadata[key]["id"] = doc_id
+            try:
+                doc_ids, scores = engine.search_db(query, top_k=top_k)
+                for rank, (doc_id, score) in enumerate(zip(doc_ids, scores), start=1):
+                    info = doc_info[doc_id]
+                    key = (query, info["text"])
+                    pair_to_metadata[key]["sources"][name] = {
+                        "rank": rank,
+                        "score": float(score),
+                    }  # 1-based
+                    pair_to_metadata[key]["url"] = info["url"]
+                    pair_to_metadata[key]["title"] = info["title"]
+                    pair_to_metadata[key]["id"] = doc_id
+            except Exception as e:
+                print(f"Error in engine {name} for query '{query}': {e}")
 
     # 3: Return output
     output = []
@@ -167,8 +173,8 @@ def build_annotation_pool(
                 "query": query,
                 "document": text,
                 "url": meta["url"],
-                "title": meta["title"],
                 "id": meta["id"],
+                "title": meta["title"],
                 "sources": meta["sources"],
             }
         )
