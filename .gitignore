@@ -186,3 +186,6 @@ benchmark_scripts/*out/
 # Some json files - Should we do *.json?
 annotation_pool.json
 xrels.json
+
+# ctags
+tags
