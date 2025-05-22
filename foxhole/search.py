@@ -139,7 +139,7 @@ class ChromaSemanticSearchEngine(SearchEngine):
         """given documents, returns documents not already in chroma database"""
         db = Chroma(persist_directory=str(self.vec_path), embedding_function=self.emb)
         ids = set([x["id"] for x in db.get()["metadatas"]])
-        return [doc for doc in docs if doc.metadata["id"] not in ids]
+        return [x for x in docs if (x.metadata["id"] not in ids) and (x.page_content)]
 
     def load_db(self):
         """reads document database, creates/updates chroma vector db"""
@@ -172,10 +172,7 @@ class ChromaSemanticSearchEngine(SearchEngine):
             )
             start += MAX_BATCH
 
-        for i in (steps := list(range(start, len(chunks), MAX_BATCH))):
-            # NOTE: progress print is untested, remove if it doesn't work,
-            # along with walrus operator above; didn't have time to test
-            print(f"{i}/{steps[-1]}")
+        for i in list(range(start, len(chunks), MAX_BATCH)):
             db.add_documents(chunks[i : i + MAX_BATCH])
 
     def search_db(self, query: str, top_k: int = 5) -> tuple[list[int], list[float]]:
