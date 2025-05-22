@@ -4,7 +4,6 @@ import re
 import sqlite3
 from abc import ABC, abstractmethod
 from pathlib import Path
-import re
 
 from langchain.schema import Document
 from langchain_chroma import Chroma
