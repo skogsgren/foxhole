@@ -24,6 +24,8 @@ foxhole-search = "foxhole.cli:main"
 foxhole-install = "foxhole.install:install_native_host"
 foxhole-update = "foxhole.cli:update_chroma_db"
 foxhole-prune = "foxhole.prune:main"
+foxhole-ls = "foxhole.cli:list_documents"
+foxhole-view = "foxhole.cli:view_document"
 
 [project.optional-dependencies]
 dev = ["pytest", "ir_measures"]

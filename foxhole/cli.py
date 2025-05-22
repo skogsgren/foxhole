@@ -1,4 +1,5 @@
 import sys
+import sqlite3
 from pathlib import Path
 
 from .config import DOCPATH, VECPATH
@@ -9,6 +10,31 @@ def update_chroma_db():
     """updates chroma db in foxhole default location with new documents"""
     se = search.ChromaSemanticSearchEngine(DOCPATH, VECPATH)
     se.load_db()
+
+
+def list_documents(db: Path = DOCPATH):
+    """list id,url,timestamp for all document in database"""
+    conn = sqlite3.connect(db)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, url, timestamp FROM pages;")
+    for row in cursor:
+        print(row[0], "\t", row[1], "\t", row[2])
+    conn.close()
+
+
+def view_document(page_id: str | None = None, db: Path = DOCPATH):
+    """list id,url,timestamp for all document in database"""
+    if not page_id:
+        if len(sys.argv) != 2:
+            print("Usage: foxhole-show <id>", file=sys.stderr)
+            sys.exit(1)
+        page_id = sys.argv[1]
+    conn = sqlite3.connect(db)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM pages WHERE id=?", (page_id,))
+    for row in cursor:  # should only happen once, but whatever
+        print(row)
+    conn.close()
 
 
 def check_method(search_method: str, search_methods: list):
