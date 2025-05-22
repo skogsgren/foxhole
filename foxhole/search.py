@@ -94,9 +94,9 @@ class BM25SearchEngine(SearchEngine):
         connection = sqlite3.connect(self.doc_path)
         cursor = connection.cursor()
         res = cursor.execute("SELECT id,url,text FROM pages;")
-        if res.fetchone() is None:
-            raise ValueError("No documents for ChromaSemanticSearch found.")
         self.ids, urls, docs = zip(*res.fetchall())
+        if not docs:
+            raise ValueError("No documents for ChromaSemanticSearch found.")
         connection.close()
 
         tokenized_docs = [re.findall(r"[\w']+", doc.strip()) for doc in docs]
