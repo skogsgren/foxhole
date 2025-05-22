@@ -15,7 +15,8 @@ dependencies = [
     "langchain-text-splitters",
     "chromadb",
     "sqlalchemy",
-    "transformers"
+    "transformers",
+    "openai"
 ]
 
 [project.scripts]
