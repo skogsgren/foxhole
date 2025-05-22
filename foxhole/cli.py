@@ -1,10 +1,16 @@
 import sys
 from pathlib import Path
 
+from .config import DOCPATH, VECPATH
 from . import search
 
 
-def check_method(search_method:str, search_methods:list):
+def update_chroma_db():
+    """updates chroma db in foxhole default location with new documents"""
+    se = search.ChromaSemanticSearchEngine(DOCPATH, VECPATH)
+    se.load_db()
+
+
 def check_method(search_method: str, search_methods: list):
     if search_method.isdigit():
         search_method = search_methods[int(search_method) - 1]

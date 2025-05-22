@@ -21,6 +21,7 @@ dependencies = [
 [project.scripts]
 foxhole-search = "foxhole.cli:main"
 foxhole-install = "foxhole.install:install_native_host"
+foxhole-update = "foxhole.cli:update_chroma_db"
 
 [project.optional-dependencies]
 dev = ["pytest", "ir_measures"]
