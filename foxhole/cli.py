@@ -34,16 +34,21 @@ def main():
     # get vec file name from command line
     try:
         vec_path = Path(sys.argv[2])
+        if not vec_path.exists() or vec_path.is_dir():
+            raise TypeError("Warning: No valid path to a vec file provided!")
+        v = True
     except:
-        raise TypeError("ERROR: No 2nd path (to vec) provided at all!")
+        print("Warning: No 2nd path (to vec) provided!")
+        vec_path = None
+        v = False #vector file provided?
     print("Vector file", vec_path, "selected.")
 
     # try getting optional top_k
-    k_provided = False
+    k = False #top_k provided?
     try:
-        if sys.argv[3][:3] == "top":
-            top_k = int(sys.argv[3][3:])
-            k_provided = True
+        if sys.argv[2+int(v)][:3] == "top":
+            top_k = int(sys.argv[2+int(v)][3:])
+            k = True
             print("top_k =", top_k)
     except:
         print("top_k not specified, using default")
@@ -53,7 +58,7 @@ def main():
     # select search method to be used
     search_methods = ("TFIDF", "BM25", "ChromaSemantic")
     try:
-        search_method = check_method(sys.argv[3+int(k_provided)], search_methods)
+        search_method = check_method(sys.argv[2+int(k)+int(v)], search_methods)
         method_provided = True
         print("Search method", search_method, "selected.")
     except:
@@ -66,17 +71,18 @@ def main():
         se = select_model(search_methods.index(search_method)+1, db_path, vec_path)
         se.load_db()
 
+
     # try getting query from command line or start interactive mode
     try:
-        _ = sys.argv[4+int(k_provided)]
-        query = " ".join(sys.argv[4+int(k_provided):])
+        _ = sys.argv[3+int(k)+int(v)]
+        query = " ".join(sys.argv[4+int(k)+int(v):])
     except:
         interactive = True
 
     # conduct the search and print the results
     if not interactive:
         print("Searching with method", search_method, "the following query:", query)
-        if k_provided:
+        if k:
             result = se.search_db(query, top_k)
         else:
             result = se.search_db(query)
@@ -100,7 +106,7 @@ def main():
                 break
             query = user_input
             print("Searching with method", search_method, "the following query:", query)
-            if k_provided:
+            if k:
                 result = se.search_db(query, top_k)
             else:
                 result = se.search_db(query)
