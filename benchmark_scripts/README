@@ -1,3 +1,49 @@
+= PREREQUISITES =
+
+Make sure the frozen dataset (gg_frozen.tar.gz) is extracted to
+./00-data/. In other words, you should have the following tree
+structure:
+
+./00-data/
+├── doc.db
+├── prompt.txt
+├── queries.tsv
+└── vec.chroma
+
+Also make sure OPENAI_API_KEY is defined in your environment (see
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+)
+
+= PREPILOT README =
+
+The purpose of the prepilot is to do prompt engineering on a small
+"dev"-set (if you will) of queries (one per "type" I think), to get to
+a point where we have a prompt which gets good interannotator
+agreement (>0.6 imo).
+
+If the folder structure looks like above, then the  ./prepilot.py
+script should "just work", and do the following:
+
+1. create annotation pool using top-k results from each IR system
+2. let llm annotate pool
+3. start manual annotation of the same pool using tkinter UI
+4. calculate inter-annotator agreement between llm and human evaluations
+5. calculate metrics on both manual annotated/llm annotated annotations.
+
+So the prepilot iterative process for you as a prompt engineer should
+be:
+
+1. adjust ./data/prompt.txt
+2. delete ./01_prepilot_out/01_llm.db to let llm annotate again.
+3. run ./prepilot.py
+4. (IF FIRST RUN) manual annotate the same pool the llm annotates (see
+   annotation instructions below for a UI guide)
+5. observe metrics
+
+& then rinse and repeat.
+
+The annotation guidelines below is only a rough first draft, changes are welcome!
+
 = ANNOTATION GUIDELINES
 
 The basic premise around this type of annotation is simple: reflect
@@ -34,6 +80,11 @@ cases:
     Christianity). I would therefore label it as "Relevant" not
     "Highly Relevant".
 
+    "father john misty" is one semantic unit, since documents only
+    returning "father john" are not relevant, "john misty" the same.
+    In other words, named entities ought to be kept together and are
+    seen as one unit.
+
 ---
 
 [^1]: Well, don't really fight me, it's not I like the book that much
@@ -42,7 +93,7 @@ cases:
 == EXAMPLES:
 
 query:
-    psychology change yourself
+    justice for snarbo
 doc_title:
     chunking_evaluation/chunking_evaluation/evalua...
 doc_text:
@@ -84,12 +135,9 @@ doc_text:
 label:
     Highly Relevant (Apple->Steve Jobs, Email->email)
 
-
 = ANNOTATION INSTRUCTIONS
 
-    python3 -m foxhole.annotate -i /path/to/eval_dataset.tsv -o /path/to/output.tsv
-
-This runs a basic tkinter interface for annotation where you can see:
+Manual annotation runs a basic tkinter interface for annotation where you can see:
 
 - ID: current document ID
 - query: the query used to get the document
