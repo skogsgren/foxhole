@@ -7,7 +7,9 @@ structure:
 ./00-data/
 ├── doc.db
 ├── prompt.txt
-├── queries.tsv
+├── queries_full.tsv
+├── queries_pilot_dev.tsv
+├── queries_pilot_full.tsv
 └── vec.chroma
 
 Also make sure OPENAI_API_KEY is defined in your environment (see
