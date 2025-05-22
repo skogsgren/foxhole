@@ -83,7 +83,7 @@ class BM25SearchEngine(SearchEngine):
 
     def __init__(self, doc_path: Path, vec_path: Path):
         super().__init__(doc_path, vec_path)
-        
+
         self.ids = []
 
     def __repr__(self) -> str:
@@ -100,17 +100,18 @@ class BM25SearchEngine(SearchEngine):
         connection.close()
 
         tokenized_docs = [re.findall(r"[\w']+", doc.strip()) for doc in docs]
-        #pip install rank_bm25
-        from rank_bm25 import BM25Plus #BM25 BM250kapi BM25L BM25Plus
+        # pip install rank_bm25
+        from rank_bm25 import BM25Plus  # BM25 BM250kapi BM25L BM25Plus
+
         self.bm25 = BM25Plus(tokenized_docs)
 
-    def search_db(self, query:str, top_k:int=5):
+    def search_db(self, query: str, top_k: int = 5):
         if self.ids == []:
             raise ValueError("No corpus documents found. Did you call load_db()?")
         # tokenize the query and return top urls
         tokenized_query = re.findall(r"[\w']+", query.strip())
         scores = self.bm25.get_scores(tokenized_query)
-        tops = sorted(zip(self.ids, scores), reverse=True, key=lambda z:z[1])[:top_k]
+        tops = sorted(zip(self.ids, scores), reverse=True, key=lambda z: z[1])[:top_k]
         top_ids, top_scores = zip(*tops)
         return list(top_ids), [float(score) for score in top_scores]
 
