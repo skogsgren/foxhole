@@ -12,14 +12,14 @@ from foxhole.eval import llm, metrics
 from foxhole.eval.metrics import Evaluator
 from foxhole.eval.annotate import annotate_sqlite, build_annotation_pool
 from foxhole.search import (
-    BM25SearchEngine,
+    # BM25SearchEngine,
     ChromaSemanticSearchEngine,
     TFIDFSearchEngine,
 )
 
 # define constants
 DATA = Path("./00-data")
-QUERIESPATH = DATA / "queries.tsv"
+QUERIESPATH = DATA / "queries_pilot_dev.tsv"
 DOCPATH = DATA / "doc.db"
 VECPATH = DATA / "vec.chroma"
 TOPK = 10
