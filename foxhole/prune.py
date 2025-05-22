@@ -5,6 +5,7 @@ import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
+from langchain_chroma import Chroma
 from .config import DATADIR, DOCPATH, IGNORE_LIST, VECPATH
 
 
@@ -55,8 +56,36 @@ def prune_sqlite_by_count(db: Path, keep_latest: int):
     raise NotImplementedError
 
 
-def prune_vec_db():
-    raise NotImplementedError
+def prune_vec_db(db: Path, **kwargs):
+    if kwargs.get("ignore_list"):
+        del_rows = prune_vector_by_ignore(db)
+    elif n := kwargs.get("older_than_days"):
+        del_rows = prune_vector_by_age(db, n)
+    elif n := kwargs.get("keep_latest"):
+        del_rows = prune_vector_by_count(db, n)
+    else:
+        raise ValueError(
+            "either ignore_list, older_than_days or keep_latest must be specified"
+        )
+    return del_rows
+
+
+def prune_vector_by_ignore(db: Path):
+    vec_db = Chroma(persist_directory=str(db))
+    urls = {
+        doc["url"]
+        for doc in vec_db.get(include=["metadatas"])["metadatas"]
+        if is_ignored(doc["url"])
+    }
+    if not urls:
+        return []
+    del_indices = []
+    for url in urls:
+        del_indices += vec_db.get(where={"url": url}, include=["metadatas"])["ids"]
+    if not del_indices:
+        return []
+    vec_db.delete(ids=del_indices)
+    return del_indices
 
 
 def prune_vector_by_age(db_path: str, older_than_days: int):
@@ -64,10 +93,6 @@ def prune_vector_by_age(db_path: str, older_than_days: int):
 
 
 def prune_vector_by_count(db_path: str, keep_latest: int):
-    raise NotImplementedError
-
-
-def prune_vector_by_ignore(db: Path):
     raise NotImplementedError
 
 
@@ -123,12 +148,8 @@ def main():
         shutil.copyfile(args.doc_path, backup_doc)
         print(f"created document database backup at {backup_doc}")
 
-        backup_vec = tempfile.NamedTemporaryFile(
-            prefix="foxhole_vec_backup_",
-            suffix=".db",
-            delete=False,
-        ).name
-        shutil.copyfile(args.vec_path, backup_vec)
+        backup_vec = tempfile.mkdtemp(prefix="foxhole_vec_backup_")
+        shutil.copytree(args.vec_path, backup_vec, dirs_exist_ok=True)
         print(f"created vector database backup at {backup_vec}")
 
     del_idx_doc = prune_doc_db(
@@ -137,6 +158,14 @@ def main():
         keep_latest=args.keep_latest,
         ignore_list=args.ignore_list,
     )
+    print(f"DOCUMENTS > deleted {len(del_idx_doc)} rows from table")
+    print(f"DOCUMENTS > deleted row indices: {del_idx_doc}")
 
-    print(f"deleted {len(del_idx_doc)} rows from table")
-    print(f"deleted row indices: {del_idx_doc}")
+    del_idx_vec = prune_vec_db(
+        args.vec_path,
+        older_than_days=args.older_than_days,
+        keep_latest=args.keep_latest,
+        ignore_list=args.ignore_list,
+    )
+    print(f"VECTOR_DB > deleted {len(del_idx_vec)} chunks")
+    print(f"VECTOR_DB > deleted chunk indices: {del_idx_vec}")
