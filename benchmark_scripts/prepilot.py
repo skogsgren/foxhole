@@ -12,7 +12,7 @@ from foxhole.eval import llm, metrics
 from foxhole.eval.metrics import Evaluator
 from foxhole.eval.annotate import annotate_sqlite, build_annotation_pool
 from foxhole.search import (
-    # BM25SearchEngine,
+    BM25SearchEngine,
     ChromaSemanticSearchEngine,
     TFIDFSearchEngine,
 )
@@ -50,14 +50,13 @@ if args.reset:
 
 # load queries for prepilot study
 with open(QUERIESPATH) as f:
-    queries = [line.split("\t")[0].strip() for line in f][1:4]
+    queries = [line.split("\t")[0].strip() for line in f][1:]
     print(f"{queries=}")
 
 if not POOL_OUT.exists():
-    # NOTE: BM-25 currently non-functional
-    # print("loading BM-25 system")
-    # bm_engine = BM25SearchEngine(DOCPATH, VECPATH)
-    # bm_engine.load_db()
+    print("loading BM-25 system")
+    bm_engine = BM25SearchEngine(DOCPATH, VECPATH)
+    bm_engine.load_db()
 
     print("loading ChromaSemantic system")
     ch_engine = ChromaSemanticSearchEngine(DOCPATH, VECPATH)
@@ -68,7 +67,7 @@ if not POOL_OUT.exists():
     tf_engine.load_db()
 
     engines = [
-        # bm_engine,
+        bm_engine,
         ch_engine,
         tf_engine,
     ]
