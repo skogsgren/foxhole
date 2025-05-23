@@ -28,6 +28,7 @@ def annotate_sqlite(inp: Path | dict, out: Path):
 
     existing_keys = set((r["query"], r["id"]) for r in output_cur.fetchall())
     filtered_rows = [r for r in rows if (r["query"], r["id"]) not in existing_keys]
+    filtered_rows = sorted(filtered_rows, key=lambda x: x["query"])
     if not filtered_rows:
         print("no rows left to annotate!")
         return
