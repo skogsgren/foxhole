@@ -46,7 +46,7 @@ parser.add_argument(
 args = parser.parse_args()
 if args.reset:
     LLM_OUT.unlink(missing_ok=True)
-    POOL_OUT.unlink(missing_ok=True)
+    LLM_XRELS.unlink(missing_ok=True)
 
 # load queries for prepilot study
 with open(QUERIESPATH) as f:
