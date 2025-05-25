@@ -24,7 +24,7 @@ DOCPATH = DATA / "doc.db"
 VECPATH = DATA / "vec.chroma"
 TOPK = 10
 
-LLM_MODEL = "gpt-4.1-nano"
+LLM_MODEL = "o4-mini"
 PROMPT = (DATA / "prompt.txt").read_text()
 SLEEP_SECONDS = 1
 
@@ -88,7 +88,7 @@ if not LLM_OUT.exists():
     conn = llm.init_annotation_db(LLM_OUT)
     llm.annotate_pool(
         pool_items=dataset,
-        text_to_id=llm.load_text_to_id_map(DOCPATH),
+        # text_to_id=llm.load_text_to_id_map(DOCPATH),
         annotation_conn=conn,
         model=LLM_MODEL,
         system_msg=PROMPT,
