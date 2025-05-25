@@ -7,19 +7,21 @@ from ir_measures import calc_aggregate
 from sklearn.metrics import cohen_kappa_score
 
 
-def interannotator_agreement(man: Path, llm: Path) -> float:
+def interannotator_agreement(man: Path, llm: Path) -> tuple[float, list[int]]:
     def load_labels(sqlite_path):
         conn = sqlite3.connect(sqlite_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT label FROM annotations")
-        labels = [row[0] for row in cursor.fetchall()]
+        cursor.execute("SELECT id, label FROM annotations")
+        data = sorted([(row[0], row[1]) for row in cursor.fetchall()])
         conn.close()
-        return labels
+        return [x[1] for x in data], [x[0] for x in data]
 
-    man_labels = load_labels(man)
-    llm_labels = load_labels(llm)
+    man_labels, man_ids = load_labels(man)
+    llm_labels, llm_ids = load_labels(llm)
     assert len(llm_labels) == len(man_labels)
-    return cohen_kappa_score(man_labels, llm_labels)
+    assert llm_ids == man_ids
+    delta = [i for n, i in enumerate(man_ids) if man_labels[n] != llm_labels[n]]
+    return (cohen_kappa_score(man_labels, llm_labels), delta)
 
 
 def export_xrels(annotations: Path, out: Path):
