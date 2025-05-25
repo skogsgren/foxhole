@@ -55,7 +55,6 @@ def call_llm(query: str, document: str, model: str, system_msg: str) -> int:
 
 def annotate_pool(
     pool_items: list[dict],
-    text_to_id: dict[str, int],
     annotation_conn: sqlite3.Connection,
     model: str,
     system_msg: str,
@@ -67,12 +66,7 @@ def annotate_pool(
     for i, item in enumerate(pool_items):
         query = item["query"]
         document = item["document"]
-        doc_id = text_to_id.get(document)
-
-        if doc_id is None:
-            print(f"Missing doc ID for item {i}")
-            continue
-
+        doc_id = item["id"]
         score = call_llm(query, document, model, system_msg)
         if score not in [0, 1, 2]:
             print(f"Invalid score for item {i}: {score}")

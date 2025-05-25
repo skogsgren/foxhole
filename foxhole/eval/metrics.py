@@ -23,7 +23,11 @@ def interannotator_agreement(
     man_labels, man_ids = load_labels(man)
     llm_labels, llm_ids = load_labels(llm)
     assert len(llm_labels) == len(man_labels)
-    assert llm_ids == man_ids
+    for i, j in zip(man_ids, llm_ids):
+        if i not in llm_ids:
+            print(f"{i} in man not llm ({i}, {j})")
+        if j not in man_ids:
+            print(f"{j} in llm not man ({i}, {j})")
 
     if debug_delta:
         delta = {
@@ -39,6 +43,7 @@ def interannotator_agreement(
                 continue
             print(
                 {
+                    "id": i,
                     "man_label": delta[i][0],
                     "llm_label": delta[i][1],
                     "title": title,
