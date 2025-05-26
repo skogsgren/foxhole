@@ -131,7 +131,7 @@ class ChromaSemanticSearchEngine(SearchEngine):
     def chunk(self, docs: list[Document]):
         """using RecursiveCharacterTextSplitter splits using model tokenizer"""
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=512
+            chunk_size=256
         ).from_huggingface_tokenizer(self.tokenizer)
         return text_splitter.split_documents(docs)
 
