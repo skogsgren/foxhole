@@ -7,10 +7,11 @@ import argparse
 import json
 from pathlib import Path
 
-from ir_measures import nDCG, MAP
+from ir_measures import MAP, nDCG
+
 from foxhole.eval import llm, metrics
-from foxhole.eval.metrics import Evaluator
 from foxhole.eval.annotate import annotate_sqlite, build_annotation_pool
+from foxhole.eval.metrics import Evaluator
 from foxhole.search import (
     BM25SearchEngine,
     ChromaSemanticSearchEngine,
