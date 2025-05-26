@@ -64,6 +64,8 @@ def prune_sqlite_by_count(db: Path, keep_latest: int):
 
 
 def prune_vec_db(db: Path, **kwargs):
+    if not db.exists():
+        return []
     if kwargs.get("ignore_list"):
         del_rows = prune_vector_by_ignore(db)
     elif n := kwargs.get("older_than_days"):
@@ -147,17 +149,19 @@ def main():
 
     print("starting foxhole pruning...")
     if not args.skip_backup:
-        backup_doc = tempfile.NamedTemporaryFile(
-            prefix="foxhole_doc_backup_",
-            suffix=".db",
-            delete=False,
-        ).name
-        shutil.copyfile(args.doc_path, backup_doc)
-        print(f"created document database backup at {backup_doc}")
+        if args.doc_path.exists():
+            backup_doc = tempfile.NamedTemporaryFile(
+                prefix="foxhole_doc_backup_",
+                suffix=".db",
+                delete=False,
+            ).name
+            shutil.copyfile(args.doc_path, backup_doc)
+            print(f"created document database backup at {backup_doc}")
 
-        backup_vec = tempfile.mkdtemp(prefix="foxhole_vec_backup_")
-        shutil.copytree(args.vec_path, backup_vec, dirs_exist_ok=True)
-        print(f"created vector database backup at {backup_vec}")
+        if args.vec_path.exists():
+            backup_vec = tempfile.mkdtemp(prefix="foxhole_vec_backup_")
+            shutil.copytree(args.vec_path, backup_vec, dirs_exist_ok=True)
+            print(f"created vector database backup at {backup_vec}")
 
     del_idx_doc = prune_doc_db(
         args.doc_path,
