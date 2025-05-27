@@ -16,7 +16,8 @@ dependencies = [
     "chromadb",
     "sqlalchemy",
     "transformers",
-    "openai"
+    "openai",
+    "rank_bm25"
 ]
 
 [project.scripts]
