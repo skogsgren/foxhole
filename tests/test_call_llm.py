@@ -14,7 +14,6 @@ SYSTEM_PROMPT = (
 )
 if __name__ == "__main__":
     # Load data
-    #text_to_id = load_text_to_id_map(CONTENT_DB_PATH)
     conn = init_annotation_db(ANNOTATION_DB_PATH)
 
     with open(ANNOTATION_POOL_PATH) as f:
@@ -22,12 +21,12 @@ if __name__ == "__main__":
 
     # Annotate
     annotate_pool(
-        pool_items=items,
-        #text_to_id=text_to_id,
-        annotation_conn=conn,
-        model=LLM_MODEL,
-        system_msg=SYSTEM_PROMPT,
-        sleep_seconds=1.0,
-    )
+    pool_items=items,
+    annotation_conn=conn,
+    model=LLM_MODEL,
+    system_msg=SYSTEM_PROMPT,
+    with_explanation=True,
+    sleep_seconds=1.0,
+)
 
     conn.close()
