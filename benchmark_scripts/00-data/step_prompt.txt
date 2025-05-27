@@ -1,0 +1,11 @@
+Think step by step about how well the document answers the query.
+Consider:
+    Is it on-topic?
+    Does it contain sufficient detail?
+    Is it complete?
+
+Then assign a score:
+    0 = Not relevant
+    1 = Somewhat relevant
+    2 = Highly relevant
+    Provide a short explanation for your judgment.

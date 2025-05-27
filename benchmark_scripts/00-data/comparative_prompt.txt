@@ -1,0 +1,9 @@
+Compare the document to an ideal answer to the query.
+How close is this document to what a user would expect when searching for this query?
+
+Score the relevance:
+    0 = Not relevant
+    1 = Somewhat relevant
+    2 = Highly relevant
+
+Briefly explain your reasoning.

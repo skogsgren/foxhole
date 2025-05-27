@@ -1,0 +1,7 @@
+Please assign a relevance score to the following document in relation to the query.
+
+Relevance scores:
+    0 = Not relevant
+    1 = Somewhat relevant
+    2 = Highly relevant
+Focus on how well the document addresses the intent and content of the query.
