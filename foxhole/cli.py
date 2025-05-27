@@ -2,8 +2,8 @@ import sys
 import sqlite3
 from pathlib import Path
 
-from .config import DOCPATH, VECPATH
-from . import search
+from config import DOCPATH, VECPATH
+import search
 
 
 def update_chroma_db():
