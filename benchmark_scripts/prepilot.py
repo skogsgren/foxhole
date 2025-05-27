@@ -26,7 +26,10 @@ VECPATH = DATA / "vec.chroma"
 TOPK = 10
 
 LLM_MODEL = "o4-mini"
-PROMPT = (DATA / "prompt.txt").read_text()
+
+
+
+#PROMPT = (DATA / "prompt.txt").read_text()
 SLEEP_SECONDS = 1
 
 (OUT := Path("./01_prepilot_out")).mkdir(exist_ok=True)
@@ -44,7 +47,18 @@ parser.add_argument(
     action="store_true",
     help=f"deletes LLM ANNOTATIONS/POOL (in {OUT.absolute()}) before run",
 )
+parser.add_argument("-p", "--prompt", type=str, help="Path to prompt.txt override") #added
 args = parser.parse_args()
+#prompt path
+prompt_path = Path(args.prompt) if args.prompt else (DATA / "prompt.txt") #added
+PROMPT = prompt_path.read_text()#added
+# Derive a suffix from the prompt file (e.g., 'strict' from 'strict.txt')
+suffix = prompt_path.stem if args.prompt else "default" #added
+
+LLM_OUT = DATA / f"01_llm_{suffix}.db"
+LLM_XRELS = DATA / f"02_llm_{suffix}_xrels.json"
+
+
 if args.reset:
     LLM_OUT.unlink(missing_ok=True)
     LLM_XRELS.unlink(missing_ok=True)
@@ -94,6 +108,7 @@ if not LLM_OUT.exists():
         model=LLM_MODEL,
         system_msg=PROMPT,
         sleep_seconds=SLEEP_SECONDS,
+        with_explanation=True,
     )
     conn.close()
 
@@ -117,3 +132,9 @@ for xrel in [MAN_XRELS, LLM_XRELS]:
         print(f"System: {s}")
         for mt, value in m.items():
             print(f"  {mt}: {value:.4f}")
+
+#added
+print(f"==> Annotated with prompt: {prompt_path.name}")
+print(f"    → LLM DB:      {LLM_OUT}")
+print(f"    → LLM xrels:   {LLM_XRELS}")
+print(f"    → Agreement:   {ia:.3f}")
