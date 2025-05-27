@@ -10,11 +10,7 @@ ANNOTATION_POOL_PATH = Path("tests/annotation_pool.json")
 LLM_MODEL = "gpt-3.5-turbo"  # We will use some other model later
 SYSTEM_PROMPT = (
     "You are an expert assessor following TREC-style relevance guidelines. "
-    "You will receive a query and a document. Score the relevance of the document to the query as:\n"
-    "- 0 = Not relevant\n"
-    "- 1 = Somewhat relevant\n"
-    "- 2 = Highly relevant\n"
-    "Reply with just the number."
+    "Please assess how relevant the following document is to the given query."
 )
 if __name__ == "__main__":
     # Load data
