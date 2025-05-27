@@ -25,7 +25,8 @@ DOCPATH = DATA / "doc.db"
 VECPATH = DATA / "vec.chroma"
 TOPK = 10
 
-LLM_MODEL = "o4-mini"
+#LLM_MODEL = "o4-mini"
+LLM_MODEL = "gpt-4.1-2025-04-14" #This does not work for some reason
 
 
 
@@ -138,3 +139,4 @@ print(f"==> Annotated with prompt: {prompt_path.name}")
 print(f"    → LLM DB:      {LLM_OUT}")
 print(f"    → LLM xrels:   {LLM_XRELS}")
 print(f"    → Agreement:   {ia:.3f}")
+print(f" Model: {LLM_MODEL}")
