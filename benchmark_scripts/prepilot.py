@@ -104,7 +104,6 @@ if not LLM_OUT.exists():
     conn = llm.init_annotation_db(LLM_OUT)
     llm.annotate_pool(
         pool_items=dataset,
-        # text_to_id=llm.load_text_to_id_map(DOCPATH),
         annotation_conn=conn,
         model=LLM_MODEL,
         system_msg=PROMPT,
