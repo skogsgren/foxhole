@@ -102,8 +102,10 @@ print("manual annotation step")
 annotate_sqlite(inp=POOL_OUT, out=MAN_OUT)
 
 # interannotator agreement
-ia = metrics.interannotator_agreement(MAN_OUT, LLM_OUT, debug_delta=DOCPATH)
-print(ia)
+ia, delta = metrics.interannotator_agreement(MAN_OUT, LLM_OUT, debug_delta=DOCPATH)
+print(f"{ia}")
+for d in delta:
+    print(d)
 
 # calculate metrics (because why not?)
 metrics.export_xrels(MAN_OUT, MAN_XRELS)

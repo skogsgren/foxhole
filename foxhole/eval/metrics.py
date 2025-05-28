@@ -15,14 +15,15 @@ def interannotator_agreement(
     def load_labels(sqlite_path):
         conn = sqlite3.connect(sqlite_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT id, label FROM annotations")
-        data = sorted([(row[0], row[1]) for row in cursor.fetchall()])
+        cursor.execute("SELECT id, label, query FROM annotations")
+        data = sorted([(row[0], row[1], row[2]) for row in cursor.fetchall()])
         conn.close()
-        return [x[1] for x in data], [x[0] for x in data]
+        return [x[1] for x in data], [x[0] for x in data], [x[2] for x in data]
 
-    man_labels, man_ids = load_labels(man)
-    llm_labels, llm_ids = load_labels(llm)
+    man_labels, man_ids, man_queries = load_labels(man)
+    llm_labels, llm_ids, llm_queries = load_labels(llm)
     assert len(llm_labels) == len(man_labels)
+    assert len(llm_queries) == len(man_queries)
     for i, j in zip(man_ids, llm_ids):
         if i not in llm_ids:
             print(f"{i} in man not llm ({i}, {j})")
@@ -31,19 +32,21 @@ def interannotator_agreement(
 
     if debug_delta:
         delta = {
-            i: (man_labels[n], llm_labels[n])
+            i: (man_labels[n], llm_labels[n], man_queries[n])
             for n, i in enumerate(man_ids)
             if man_labels[n] != llm_labels[n]
         }
         conn = sqlite3.connect(debug_delta)
         cursor = conn.cursor()
         cursor.execute("SELECT id, title, url FROM pages;")
+        delta_res = []
         for i, title, url in cursor:
             if i not in delta:
                 continue
-            print(
+            delta_res.append(
                 {
                     "id": i,
+                    "query": delta[i][2],
                     "man_label": delta[i][0],
                     "llm_label": delta[i][1],
                     "title": title,
@@ -51,7 +54,7 @@ def interannotator_agreement(
                 }
             )
 
-    return cohen_kappa_score(man_labels, llm_labels)
+    return cohen_kappa_score(man_labels, llm_labels), delta_res
 
 
 def export_xrels(annotations: Path, out: Path):

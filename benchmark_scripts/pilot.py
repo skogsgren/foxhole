@@ -3,6 +3,7 @@
 
 import argparse
 import json
+from collections import defaultdict
 from pathlib import Path
 
 from ir_measures import MAP, nDCG
@@ -33,6 +34,8 @@ LLM_OUT = OUT / "01_llm.db"
 MAN_OUT = OUT / "01_man.db"
 LLM_XRELS = OUT / "02_llm_xrels.json"
 MAN_XRELS = OUT / "02_man_xrels.json"
+
+METRICS_OUT = OUT / "03_metrics.json"
 
 # define reset argparse
 parser = argparse.ArgumentParser()
@@ -82,6 +85,10 @@ else:
         dataset = json.load(f)
 
 
+# manual annotation for dataset
+print("manual annotation step")
+annotate_sqlite(inp=POOL_OUT, out=MAN_OUT)
+
 # get llm annotations for dataset
 if not LLM_OUT.exists():
     conn = llm.init_annotation_db(LLM_OUT)
@@ -95,15 +102,17 @@ if not LLM_OUT.exists():
     )
     conn.close()
 
-# manual annotation for dataset
-print("manual annotation step")
-annotate_sqlite(inp=POOL_OUT, out=MAN_OUT)
+res = defaultdict(dict)
 
 # interannotator agreement
-ia = metrics.interannotator_agreement(MAN_OUT, LLM_OUT, debug_delta=DOCPATH)
-print(ia)
+ia, delta = metrics.interannotator_agreement(MAN_OUT, LLM_OUT, debug_delta=DOCPATH)
+res["ia"]["score"] = ia
+res["ia"]["deltas"] = delta
+print(f"{ia=}")
+for d in delta:
+    print(d)
 
-# calculate metrics (because why not?)
+# calculate metrics
 metrics.export_xrels(MAN_OUT, MAN_XRELS)
 metrics.export_xrels(LLM_OUT, LLM_XRELS)
 
@@ -111,7 +120,11 @@ for xrel in [MAN_XRELS, LLM_XRELS]:
     print(f"= EVALUATING FOR {xrel.name}")
     evaluator = Evaluator(xrel, POOL_OUT)
     results = evaluator.evaluate([nDCG @ TOPK, MAP])
+    res["metrics"][xrel.name] = results
     for s, m in results.items():
         print(f"System: {s}")
         for mt, value in m.items():
             print(f"  {mt}: {value:.4f}")
+
+with open(METRICS_OUT, "w") as f:
+    json.dump(res, f)
