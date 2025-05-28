@@ -1,5 +1,6 @@
-import sqlite3
 import json
+import sqlite3
+import sys
 import tkinter as tk
 from collections import defaultdict
 from pathlib import Path
@@ -112,7 +113,17 @@ def annotate_sqlite(inp: Path | dict, out: Path):
     root.bind("<KeyPress>", on_key_press)
 
     update_display()
-    root.mainloop()
+
+    def on_close():
+        root.destroy()
+        sys.exit("Annotation prematurely aborted by user.")
+
+    root.protocol("WM_DELETE_WINDOW", on_close)
+    try:
+        root.mainloop()
+    except RuntimeError:
+        output_conn.close()
+        raise
 
 
 def build_annotation_pool(
