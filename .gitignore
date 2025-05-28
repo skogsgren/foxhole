@@ -189,3 +189,7 @@ xrels.json
 
 # ctags
 tags
+
+!benchmark_scripts/02_pilot_out/
+benchmark_scripts/02_pilot_out/*.json
+!benchmark_scripts/02_pilot_out/03_metrics.json
