@@ -32,7 +32,7 @@ def init_annotation_db(annotation_db_path: Path) -> sqlite3.Connection:
 
 def call_llm(query: str, document: str, model: str, system_msg: str) -> int:
     """Send a query + document to the LLM and return a relevance score."""
-    prompt = f"Query: {query}\n\nDocument:\n{' '.join(document.split()[:100000])}\n\nRelevance score (0–2)?"
+    prompt = f"Query: {query}\n\nDocument:\n{' '.join(document.split()[:60000])}\n\nRelevance score (0–2)?"
 
     response = openai.chat.completions.create(
         model=model,
