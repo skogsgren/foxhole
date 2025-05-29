@@ -193,3 +193,8 @@ tags
 !benchmark_scripts/02_pilot_out/
 benchmark_scripts/02_pilot_out/*.json
 !benchmark_scripts/02_pilot_out/03_metrics.json
+
+!benchmark_scripts/03_benchmark/
+benchmark_scripts/03_benchmark/*.json
+!benchmark_scripts/03_benchmark/03_metrics.json
+!benchmark_scripts/03_benchmark/01_ann.db
