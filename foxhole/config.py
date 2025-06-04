@@ -2,8 +2,6 @@ import os
 import sys
 from pathlib import Path
 
-MODELSPEC = "sentence-transformers/all-MiniLM-L6-v2"
-
 if sys.platform.startswith("linux"):
     DATADIR = Path.home() / ".local" / "share" / "foxhole"
     MANIFESTDIR = Path.home() / ".mozilla" / "native-messaging-hosts"
@@ -33,14 +31,8 @@ else:
 DATADIR = DATADIR.expanduser().resolve()
 MANIFESTDIR = MANIFESTDIR.expanduser().resolve()
 
-DOCPATH = (DATADIR / "doc.db").expanduser().resolve()
-VECPATH = (DATADIR / "vec.chroma").expanduser().resolve()
+DOCPATH = (DATADIR / "doc.sqlite").expanduser().resolve()
 
 ignore_list_path = DATADIR / "IGNORE"
 ignore_list_path.touch(exist_ok=True)
 IGNORE_LIST = ignore_list_path.read_text().splitlines()
-
-TEST_QUERIES = [
-    "superman",
-    "machine learning",
-]
