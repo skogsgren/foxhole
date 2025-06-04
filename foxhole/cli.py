@@ -52,6 +52,7 @@ def main():
             FROM pages_fts
             JOIN pages ON pages_fts.rowid = pages.id
             WHERE pages_fts MATCH ?
+            ORDER BY rank
             LIMIT ?
         """,
             (query, args.k),
