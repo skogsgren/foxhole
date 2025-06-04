@@ -34,6 +34,24 @@ def view_document(page_id: str | None = None, db: Path = DOCPATH):
     conn.close()
 
 
+def run_query(query: str, k: int = 10, db: Path = DOCPATH):
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        res = cursor.execute(
+            """
+            SELECT pages.id, pages.url, pages.title
+            FROM pages_fts
+            JOIN pages ON pages_fts.rowid = pages.id
+            WHERE pages_fts MATCH ?
+            ORDER BY rank
+            LIMIT ?
+        """,
+            (query, k),
+        )
+        for row in res:
+            print(f"{row[0]}\t{row[1]}\t{row[2]}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=f"CLI interface for foxhole (FOXHOLE DATADIR={DATADIR})"
@@ -45,22 +63,7 @@ def main():
     query = " ".join(f'"{t}"' if " " in t else t for t in args.query)
     if not query:
         raise ValueError("ERR: query can't be empty")
-
-    with (conn := sqlite3.connect(DOCPATH)):
-        cursor = conn.cursor()
-        res = cursor.execute(
-            """
-            SELECT pages.id, pages.url, pages.title
-            FROM pages_fts
-            JOIN pages ON pages_fts.rowid = pages.id
-            WHERE pages_fts MATCH ?
-            ORDER BY rank
-            LIMIT ?
-        """,
-            (query, args.k),
-        )
-        for row in res:
-            print(f"{row[0]}\t{row[1]}\t{row[2]}")
+    run_query(query, k=args.k)
 
 
 if __name__ == "__main__":

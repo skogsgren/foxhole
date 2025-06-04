@@ -17,6 +17,9 @@ foxhole-view = "foxhole.cli:view_document"
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project.optional-dependencies]
+dev = ["pytest"]
+
 [tool.setuptools]
 packages = ["foxhole"]
 

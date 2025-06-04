@@ -8,9 +8,9 @@ from urllib.parse import urlparse
 from .config import DATADIR, DOCPATH, IGNORE_LIST
 
 
-def is_ignored(url):
+def is_ignored(url, ignore_list=IGNORE_LIST):
     netloc = urlparse(url).netloc
-    for domain in IGNORE_LIST:
+    for domain in ignore_list:
         if netloc == domain:
             return True
         if netloc.endswith("." + domain):
@@ -36,12 +36,12 @@ def prune_doc_db(db: Path, **kwargs) -> list[int]:
     return del_rows
 
 
-def prune_sqlite_by_ignore(db: Path) -> list[int]:
+def prune_sqlite_by_ignore(db: Path, ignore_list=IGNORE_LIST) -> list[int]:
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     cur.execute("SELECT rowid, url FROM pages")
     rows = cur.fetchall()
-    del_idx = [rowid for rowid, url in rows if is_ignored(url)]
+    del_idx = [rowid for rowid, url in rows if is_ignored(url, ignore_list)]
     if not del_idx:
         conn.close()
         return []
@@ -54,12 +54,53 @@ def prune_sqlite_by_ignore(db: Path) -> list[int]:
     return del_idx
 
 
-def prune_sqlite_by_age(db: Path, older_than_days: int):
-    raise NotImplementedError
+def prune_sqlite_by_age(db: Path, older_than_days: int) -> list[int]:
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT rowid FROM pages
+        WHERE timestamp < datetime('now', ?)
+    """,
+        (f"-{older_than_days} days",),
+    )
+    rows = cur.fetchall()
+    del_idx = [rowid for (rowid,) in rows]
+    if not del_idx:
+        conn.close()
+        return []
+    cur.executemany(
+        "DELETE FROM pages WHERE rowid = ?",
+        [(rid,) for rid in del_idx],
+    )
+    conn.commit()
+    conn.close()
+    return del_idx
 
 
-def prune_sqlite_by_count(db: Path, keep_latest: int):
-    raise NotImplementedError
+def prune_sqlite_by_count(db: Path, keep_latest: int) -> list[int]:
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT rowid FROM pages
+        ORDER BY timestamp DESC
+        LIMIT -1 OFFSET ?
+    """,
+        (keep_latest,),
+    )
+    rows = cur.fetchall()
+    del_idx = [rowid for (rowid,) in rows]
+    if not del_idx:
+        conn.close()
+        return []
+    cur.executemany(
+        "DELETE FROM pages WHERE rowid = ?",
+        [(rid,) for rid in del_idx],
+    )
+    conn.commit()
+    conn.close()
+    return del_idx
 
 
 def main():
