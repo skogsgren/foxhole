@@ -40,7 +40,7 @@ def main():
     parser.add_argument("query", nargs=argparse.REMAINDER)
     args = parser.parse_args()
 
-    query = " ".join(args.query).strip()
+    query = " ".join(f'"{t}"' if " " in t else t for t in args.query)
     if not query:
         raise ValueError("ERR: query can't be empty")
 
