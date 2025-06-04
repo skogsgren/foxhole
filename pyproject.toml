@@ -7,7 +7,7 @@ authors = [
 description = "Text search for Firefox history"
 
 [project.scripts]
-foxhole-search = "foxhole.cli:main"
+foxhole= "foxhole.cli:main"
 foxhole-install = "foxhole.install:install_native_host"
 foxhole-prune = "foxhole.prune:main"
 foxhole-ls = "foxhole.cli:list_documents"

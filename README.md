@@ -58,7 +58,7 @@ provide highly relevant search results for this type of browser history search
 Here's an example search:
 
 ```
-foxhole-search android phone with buttons
+foxhole android phone with buttons
 ```
 
 Which in my case returns:
@@ -81,19 +81,19 @@ of options, see the [FTS5 Documentation](https://sqlite.org/fts5.html). Key
 operators include:
 
 - `AND`: Matches documents containing both terms.  
-  **Example**: `foxhole-search perry AND white` returns documents that include
+  **Example**: `foxhole perry AND white` returns documents that include
   both "perry" and "white".
 
 - `OR`: Matches documents containing either term.  
-  **Example**: `foxhole-search perry OR white` returns documents that include
+  **Example**: `foxhole perry OR white` returns documents that include
   either "perry" or "white".
 
 - `NOT`: Excludes documents containing the specified term.  
-  **Example**: `foxhole-search perry NOT white` returns documents that include
+  **Example**: `foxhole perry NOT white` returns documents that include
   "perry" but exclude "white".
 
 - `"<phrase>"`: Matches exact phrases.  
-  **Example**: `foxhole-search "perry white"` returns documents containing the
+  **Example**: `foxhole "perry white"` returns documents containing the
   exact phrase "perry white", not just the individual terms.
 
 ### Grepping
@@ -135,9 +135,8 @@ sqlite3 ~/.local/share/foxhole/doc.db "SELECT id,url,title,text FROM pages;" | \
 Which would be easy to add to your `bash_aliases`.
 
 If you're on Windows/Mac/Linux and the command above isn't working you might
-have another location for your data directory (which on UNIX by default is
-`~/.local/share/foxhole`). Print that out by installing foxhole again using
-`foxhole-install`.
+have another location for your data directory. Print that out by running
+`foxhole -h`
 
 ## Development Installation
 
