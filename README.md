@@ -12,10 +12,10 @@ database. You can then search using either the built-in SQLITE search, `grep`
 (see [grepping](#grepping) below), or whatever other method you want.
 
 - **Will this save my bank-statements?** Not if you blacklist the bank's
-  webpage (see the notes regarding ignoring webpages under Installation). I
-  mean, who am I to judge? Maybe you want that. If you accidentally save
-  information you can prune it using the built-in `foxhole-prune` command (see
-  section below).
+  webpage (see the notes regarding ignoring webpages under
+  [Installation](#installation). I mean, who am I to judge? Maybe you want
+  that. If you accidentally save information you can prune it using the
+  built-in `foxhole-prune` command (see [here](#pruning) for more details).
 
 - **I don't trust you.** Me neither. However, the codebase is minimal, and I
   recommend looking through what happens when `foxhole` saves the information.
@@ -50,11 +50,13 @@ foxhole-install
 
 Then install the Firefox extension.
 
+### Ignoring webpages
+
 In your data directory a file called `IGNORE` will be created during
-installation. Put urls you don't want saved in here, or (imo) most importantly
-those pages you keep returning to often like your search engine which will not
-provide highly relevant search results for this type of browser history search
-(ideally we only want "content" sites in our index).
+installation. Put urls you don't want saved in here, or (imo) those pages you
+keep returning to often like your search engine which will not provide highly
+relevant search results for this type of browser history search (ideally we
+only want "content" sites in our index).
 
 ## Usage
 
@@ -100,6 +102,21 @@ operators include:
 - `"<phrase>"`: Matches exact phrases.  
   **Example**: `foxhole "perry white"` returns documents containing the
   exact phrase "perry white", not just the individual terms.
+
+### Pruning
+
+By default the extension just keeps storing documents in the database. You
+might want to prune this eventually though, for storage reasons, or if you
+forgot to add a domain to IGNORE. The `foxhole-prune` command deals with this.
+You can either prune by keeping only the documents _x_ days back, only the most
+recent _x_ documents, or by pruning using the `ignore_list`. For example,
+here's how you would prune using the ignore list:
+
+```
+foxhole-prune --ignore_list
+```
+
+See `foxhole-prune -h` for full usage description.
 
 ### Grepping
 
@@ -150,7 +167,7 @@ pip3 install -e .
 ```
 
 For Windows, make sure that `python3` is installed from the Python website and
-is added to PATH.
+is added to PATH. You can't do WSL here AFAICT.
 
 Install the host connection using:
 
