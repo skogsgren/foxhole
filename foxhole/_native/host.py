@@ -49,6 +49,13 @@ def main():
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    conn.execute("""
+    CREATE VIRTUAL TABLE IF NOT EXISTS pages_fts USING fts5(
+        title, text, content='pages', content_rowid='id'
+    )
+    """)
+
     msg = read_message()
     if (
         msg
@@ -62,6 +69,10 @@ def main():
             (msg["title"], msg["text"], msg["url"]),
         )
         conn.commit()
+
+        conn.execute("INSERT INTO pages_fts(pages_fts) VALUES('rebuild')")
+        conn.commit()
+
         write_response({"status": "ok"})
     else:
         write_response({"status": "error"})
