@@ -3,7 +3,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from .config import DOCPATH
+from .config import DATADIR, DOCPATH
 
 
 def list_documents(db: Path = DOCPATH):
@@ -35,7 +35,9 @@ def view_document(page_id: str | None = None, db: Path = DOCPATH):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="CLI interface for foxhole")
+    parser = argparse.ArgumentParser(
+        description=f"CLI interface for foxhole (FOXHOLE DATADIR={DATADIR})"
+    )
     parser.add_argument("-k", default=10, type=int, help="number of results;default 10")
     parser.add_argument("query", nargs=argparse.REMAINDER)
     args = parser.parse_args()
