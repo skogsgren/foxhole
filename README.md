@@ -17,6 +17,11 @@ database. You can then search using either the built-in SQLITE search, `grep`
   information you can prune it using the built-in `foxhole-prune` command (see
   section below).
 
+- **I don't trust you.** Me neither. However, the codebase is minimal, and I
+  recommend looking through what happens when `foxhole` saves the information.
+  The webextension is [here](webextension/background.js) and the native host
+  connector is [here](foxhole/_native/host.py).
+
 - **Why SQLITE instead of local storage?** Extensions like
   [Falcon](https://github.com/cennoxx/falcon) utilize local storage, and
   provides a nice frontend for search directly from Firefox.  However, local
