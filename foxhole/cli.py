@@ -8,7 +8,6 @@ from .config import DATADIR, DOCPATH
 
 def list_documents(db: Path = DOCPATH):
     conn = sqlite3.connect(db)
-    conn.execute(f"PRAGMA mmap_size = {db.stat().st_size}")
     cursor = conn.cursor()
     cursor.execute("SELECT id, url, title, text FROM pages;")
     for row in cursor.fetchall():
@@ -26,12 +25,11 @@ def view_document(page_id: str | None = None, db: Path = DOCPATH):
             print("Usage: foxhole-show <id>", file=sys.stderr)
             sys.exit(1)
         page_id = sys.argv[1]
-    conn = sqlite3.connect(db)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM pages WHERE id=?", (page_id,))
-    for row in cursor:  # NOTE: should only happen once, but whatever
-        print(row)
-    conn.close()
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pages WHERE id=?", (page_id,))
+        for row in cursor:  # NOTE: should only happen once, but whatever
+            print(row)
 
 
 def run_query(query: str, k: int = 10, db: Path = DOCPATH):
