@@ -103,6 +103,14 @@ operators include:
   **Example**: `foxhole "perry white"` returns documents containing the
   exact phrase "perry white", not just the individual terms.
 
+### Viewing
+
+The included `foxhole-view` command lets you view one entry from the database, given an ID (which you get by searching, see above). For example, to print out the content of the web page with ID 1111:
+
+```
+foxhole-view 1111
+```
+
 ### Pruning
 
 By default the extension just keeps storing documents in the database. You
