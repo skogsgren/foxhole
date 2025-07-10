@@ -50,6 +50,9 @@ foxhole-install
 
 Then install the Firefox extension.
 
+You can of course install using just `pip` if you have global pip (like on
+Mac/Windows) or `venv` instead of using `pipx`.
+
 ### Ignoring webpages
 
 In your data directory a file called `IGNORE` will be created during
@@ -162,7 +165,7 @@ sqlite3 ~/.local/share/foxhole/doc.db "SELECT id,url,title,text FROM pages;" | \
     cut -f 1,2,3 -d "|"
 ```
 
-Which would be easy to add to your `bash_aliases`.
+Which would be easy to add as a function to your `bashrc`.
 
 If you're on Windows/Mac/Linux and the command above isn't working you might
 have another location for your data directory. Print that out by running
