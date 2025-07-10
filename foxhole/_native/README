@@ -1,2 +1,8 @@
 This folder is a placeholder for host.py which is copied to a set
 directory for native host messaging.
+
+Currently this means some duplication has to occur, namely the
+is_ignored function. This is because some people will probably use
+venv, some global pip, and some pipx. So, config.py needs to be
+accessible to the native host connector no matter what. If you know a
+better way, send a holler!
