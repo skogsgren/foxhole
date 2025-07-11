@@ -29,7 +29,9 @@ else:
     raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
 DATADIR = DATADIR.expanduser().resolve()
+DATADIR.mkdir(parents=True, exist_ok=True)
 MANIFESTDIR = MANIFESTDIR.expanduser().resolve()
+MANIFESTDIR.mkdir(parents=True, exist_ok=True)
 
 DOCPATH = (DATADIR / "doc.sqlite").expanduser().resolve()
 
