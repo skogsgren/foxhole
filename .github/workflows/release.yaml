@@ -6,7 +6,7 @@ on:
 
 jobs:
   call-test-release:
-    uses: ./.github/workflows/pytest.yml
+    uses: ./.github/workflows/pytest.yaml
 
   build-py:
     name: build dist
