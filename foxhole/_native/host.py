@@ -11,9 +11,15 @@ from config import DATADIR, DOCPATH, IGNORE_LIST
 
 def is_ignored(url):
     netloc = urlparse(url).netloc
-    return any(
-        netloc == domain or netloc.endswith("." + domain) for domain in IGNORE_LIST
-    )
+    for domain in IGNORE_LIST:
+        if netloc == domain:
+            return True
+        if netloc.endswith("." + domain):
+            return True
+        parts = urlparse(url).path.split("/")[1:]
+        for i in range(len(parts) + 1):
+            if domain == netloc + "/" + "/".join(parts[:i]):
+                return True
 
 
 def read_message():
@@ -43,6 +49,13 @@ def main():
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    conn.execute("""
+    CREATE VIRTUAL TABLE IF NOT EXISTS pages_fts USING fts5(
+        title, text, content='pages', content_rowid='id'
+    )
+    """)
+
     msg = read_message()
     if (
         msg
@@ -56,6 +69,10 @@ def main():
             (msg["title"], msg["text"], msg["url"]),
         )
         conn.commit()
+
+        conn.execute("INSERT INTO pages_fts(pages_fts) VALUES('rebuild')")
+        conn.commit()
+
         write_response({"status": "ok"})
     else:
         write_response({"status": "error"})

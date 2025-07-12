@@ -1,0 +1,97 @@
+name: release build
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  call-test-release:
+    uses: ./.github/workflows/pytest.yml
+
+  build-py:
+    name: build dist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - name: set up python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: install pypa/build
+      run: >-
+        python3 -m
+        pip install
+        build
+    - name: build wheel and src tarball
+      run: python3 -m build
+    - name: store dist
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+
+  publish-to-pypi:
+    name: publish python dist to pypi
+    needs:
+    - build-py
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/foxhole
+    permissions:
+      id-token: write
+    steps:
+    - name: download dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: publish dist
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+
+  sign-webext:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: web-ext build
+        id: web-ext-build
+        uses: kewisch/action-web-ext@v1
+        with:
+          cmd: build
+          source: webextension
+
+      - name: collect metadata
+        id: metadata
+        run: echo "json=$(jq -c . < webextension/amo_metadata.json)" >> $GITHUB_OUTPUT
+
+      - name: web-ext sign AMO
+        id: web-ext-sign
+        uses: kewisch/action-web-ext@v1
+        with:
+          cmd: sign
+          source: ${{ steps.web-ext-build.outputs.target }}
+          channel: unlisted
+
+          metaDataFile: webextension/amo_metadata.json
+          approvalNotes: "please find more information at https://github.com/kewisch/action-web-ext"
+          releaseNotes: ${{ github.event.release.body }}
+
+          license: GPL-3.0-only
+          licenseFile: LICENSE
+
+          apiKey: ${{ secrets.AMO_SIGN_KEY }}
+          apiSecret: ${{ secrets.AMO_SIGN_SECRET }}
+          timeout: 900000
+
+      - name: attach release assets to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} \
+            ${{ steps.web-ext-sign.outputs.target }}
