@@ -1,5 +1,7 @@
 # Foxhole - Local Fulltext Search For Firefox History
 
+![call-test-push](https://github.com/skogsgren/foxhole/workflows/call-test-push/badge.svg)
+
 Local-first tool to store and search your Firefox browsing history in full text.
 
 **Motivation**: browsers only store URL and title in the history. But what if
