@@ -1,0 +1,11 @@
+{
+  "summary": {
+    "en-US": "minimal plugin to send content of loaded tabs to native host connection"
+  },
+  "categories": [
+    "other"
+  ],
+  "version": {
+    "license": "GPL-3.0-or-later"
+  }
+}
