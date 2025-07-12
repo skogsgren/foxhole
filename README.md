@@ -2,6 +2,8 @@
 
 [![test on push](https://github.com/skogsgren/foxhole/actions/workflows/push.yaml/badge.svg?event=push)](https://github.com/skogsgren/foxhole/actions/workflows/push.yaml)
 
+[![pypi link](https://img.shields.io/pypi/v/foxhole.svg)](https://pypi.org/project/foxhole/)
+
 
 Local-first tool to store and search your Firefox browsing history in full text.
 
