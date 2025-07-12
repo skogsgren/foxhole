@@ -51,7 +51,8 @@ pipx install foxhole
 foxhole-install
 ```
 
-Then install the Firefox extension.
+Then install the Firefox extension by downloading the .xpi from [latest
+release](https://github.com/skogsgren/foxhole/releases/latest)
 
 You can of course install using just `pip` if you have global pip (like on
 Mac/Windows) or `venv` instead of using `pipx`.
