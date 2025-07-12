@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "foxhole",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "permissions": ["tabs", "nativeMessaging", "<all_urls>"],
   "background": {
     "scripts": ["background.js"]

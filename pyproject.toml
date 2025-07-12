@@ -1,7 +1,7 @@
 [project]
 name = "foxhole"
 readme = "README.md"
-version = "0.1.3"
+version = "0.1.4"
 authors = [
     {name="Gustaf Gren", email="6107181+skogsgren@users.noreply.github.com"},
 ]
