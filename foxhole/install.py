@@ -1,7 +1,5 @@
 import json
-import os
 import shutil
-import stat
 import sys
 from pathlib import Path
 
@@ -9,17 +7,16 @@ from .config import DATADIR, MANIFESTDIR
 
 
 def install_native_host():
-    base_dir = Path(__file__).parent
-    shutil.copy2(base_dir / "_native" / "host.py", DATADIR / "host.py")
-    shutil.copy2(base_dir / "config.py", DATADIR / "config.py")
-    mode = os.stat(DATADIR / "host.py").st_mode
-    os.chmod(DATADIR / "host.py", mode | stat.S_IXUSR)
+    exe = shutil.which("foxhole-add")
+    if exe is None:
+        raise RuntimeError("foxhole-add not found on PATH")
+    exe_path = Path(exe).resolve()
 
     manifest_path = MANIFESTDIR / "foxhole_host.json"
     manifest = {
         "name": "foxhole_host",
         "description": "foxhole Native Messaging Host",
-        "path": str(DATADIR / "host.py"),
+        "path": str(exe_path),
         "type": "stdio",
         "allowed_extensions": ["foxhole@localhost"],
     }

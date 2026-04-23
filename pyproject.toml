@@ -6,9 +6,14 @@ authors = [
     {name="Gustaf Gren", email="6107181+skogsgren@users.noreply.github.com"},
 ]
 description = "Text search for Firefox history"
+dependencies = [
+    "pypdfium2==5.7.1",
+    "requests",
+]
 
 [project.scripts]
 foxhole= "foxhole.cli:main"
+foxhole-add = "foxhole.native:main"
 foxhole-install = "foxhole.install:install_native_host"
 foxhole-prune = "foxhole.prune:main"
 foxhole-ls = "foxhole.cli:list_documents"
