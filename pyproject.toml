@@ -1,7 +1,7 @@
 [project]
 name = "foxhole"
 readme = "README.md"
-version = "0.1.4"
+dynamic = ["version"]
 authors = [
     {name="Gustaf Gren", email="6107181+skogsgren@users.noreply.github.com"},
 ]
@@ -20,7 +20,7 @@ foxhole-ls = "foxhole.cli:list_documents"
 foxhole-view = "foxhole.cli:view_document"
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]

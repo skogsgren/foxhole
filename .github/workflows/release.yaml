@@ -11,10 +11,13 @@ jobs:
   build-py:
     name: build dist
     runs-on: ubuntu-latest
+    env:
+      SETUPTOOLS_SCM_OVERRIDES_FOR_FOXHOLE: '{local_scheme = "no-local-version-strict"}'
     steps:
     - uses: actions/checkout@v4
       with:
         persist-credentials: false
+        fetch-depth: 0
     - name: set up python
       uses: actions/setup-python@v5
       with:
