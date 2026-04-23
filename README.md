@@ -165,7 +165,7 @@ fast for reads. If you have SQLITE installed you can do blazingly fast grepping
 using for example (if you're on Linux/Mac):
 
 ```
-sqlite3 ~/.local/share/foxhole/doc.db "SELECT id,url,title,text FROM pages;" | \
+sqlite3 ~/.local/share/foxhole/doc.sqlite "SELECT id,url,title,text FROM pages;" | \
     grep -i "perry white" | \
     cut -f 1,2,3 -d "|"
 ```
