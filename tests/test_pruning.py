@@ -25,7 +25,7 @@ def dummy_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    now = datetime.utcnow()
+    now = datetime.now()
     test_data = [
         ("http://example.com", now),
         ("http://ignored.com", now - timedelta(days=10)),
