@@ -64,6 +64,14 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
+      - name: set manifest version from release tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg version "$VERSION" \
+            '.version = $version' \
+            webextension/manifest.json > /tmp/manifest.json
+          mv /tmp/manifest.json webextension/manifest.json
+
       - name: web-ext build
         id: web-ext-build
         uses: kewisch/action-web-ext@v1
