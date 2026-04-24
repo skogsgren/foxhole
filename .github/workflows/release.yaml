@@ -12,7 +12,7 @@ jobs:
     name: build dist
     runs-on: ubuntu-latest
     env:
-      SETUPTOOLS_SCM_OVERRIDES_FOR_FOXHOLE: '{local_scheme = "no-local-version-strict"}'
+      SETUPTOOLS_SCM_OVERRIDES_FOR_FOXHOLE: '{local_scheme = "no-local-version"}'
     steps:
     - uses: actions/checkout@v4
       with:
