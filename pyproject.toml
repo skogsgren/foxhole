@@ -20,14 +20,17 @@ foxhole-ls = "foxhole.cli:list_documents"
 foxhole-view = "foxhole.cli:view_document"
 
 [build-system]
-requires = ["setuptools", "setuptools-scm", "wheel"]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8", "wheel"]
 build-backend = "setuptools.build_meta"
+
 
 [project.optional-dependencies]
 dev = ["pytest"]
 
 [tool.setuptools]
 packages = ["foxhole"]
+
+[tool.setuptools_scm]
 
 [tool.ruff]
 select = ["E", "F", "I"]
